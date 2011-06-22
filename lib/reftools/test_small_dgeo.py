@@ -2,17 +2,25 @@
 
 from __future__ import division # confidence high
 
-import  pyfits, pywcs
-from pywcs import WCS, DistortionLookupTable
-import numpy as np
-from matplotlib import pyplot as pl
-#pl.hold(False)
-from stwcs import wcsutil,updatewcs
-import numdisplay
-from pytools import fileutil
-import wtraxyutils
 import os
-import imagestats
+import warnings
+
+import numpy as np
+import pyfits
+import stsci.numdisplay as numdisplay
+from stsci.tools import fileutil
+from pywcs import WCS, DistortionLookupTable
+from stwcs import wcsutil, updatewcs
+
+import wtraxyutils
+
+try:
+    from matplotlib import pyplot as pl
+    has_matplotlib = True
+except ImportError:
+    has_matplotlib = False
+    warnings.warn('Matplotlib not installed; plots will not be displayed.')
+#pl.hold(False)
 
 __version__ = '0.3.1'
 __vdate__ = '2010-04-16'
@@ -25,7 +33,7 @@ def help():
 def build_grid_arrays(nx,ny,step):
     grid = [nx,ny,step]
     print 'grid of : ',nx,'x',ny,' by ',step
-        
+
     #grid=[4096,2048,1]
     xpts = np.array(range(1,grid[0]+1,grid[2]),np.float32)
     ypts = np.array(range(1,grid[1]+1,grid[2]),np.float32)
@@ -45,7 +53,7 @@ def transform_d2im_dgeo(img,extver,xarr,yarr,verbose=False):
         print 'Det2im results span: '
         print d2imx.min(),d2imx.max(),d2imx.shape
         print d2imy.min(),d2imy.max(),d2imy.shape
-    
+
     xout, yout = w.p4_pix2foc(d2imx,d2imy,1)
     if verbose:
         print 'pix2foc results span: '
@@ -55,40 +63,40 @@ def transform_d2im_dgeo(img,extver,xarr,yarr,verbose=False):
     return xout,yout
 
 def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None,vmax=None,plot_offset=0,plot_samp=32):
-    """ 
-        This routine compares how well the sub-sampled DGEOFILE (generated 
-        using the 'makesmall' module) corrects the input science image as 
-        opposed to the full-size DGEOFILE.  
-        
+    """
+        This routine compares how well the sub-sampled DGEOFILE (generated
+        using the 'makesmall' module) corrects the input science image as
+        opposed to the full-size DGEOFILE.
+
         SYNTAX:
             import test_small_dgeo
             test_small_dgeo.run(scifile,dgeofile=None,output=False)
-        
+
         where:
             scifile   - name of science image
             dgeofile  - name of full-sized DGEOFILE if not in DGEOFILE keyword
             output    - if True, write out differences to FITS file(s)
 
         The user can either specify the full-size DGEOFILE reference filename
-        as the 'dgeofile' parameter or the code will look for the 'DGEOFILE' 
+        as the 'dgeofile' parameter or the code will look for the 'DGEOFILE'
         keyword in the primary header for the name of the full-sized reference
-        file.  
-        
+        file.
+
         The primary output will be a series of plots showing the difference images
         with the mean and stddev of the differences in the label of the image display.
-        
-        If the 'output' parameter is set to True, these differences 
+
+        If the 'output' parameter is set to True, these differences
         will then be written out to FITS files based on the input science image
         rootname. Both the DX and DY differences for a single chip will be written
-        out to the same file, with a separate file for each chip. 
-        
+        out to the same file, with a separate file for each chip.
+
     """
     if update:
         # update input SCI file to be consistent with reference files in header
         print 'Updating input file ',scifile,' to be consistent with reference files listed in header...'
         updatewcs.updatewcs(scifile)
     # Now, get the original NPOLFILE and overwrite the data in the scifile
-    # WCSDVARR extensions to remove the scaling by the linear terms imposed by 
+    # WCSDVARR extensions to remove the scaling by the linear terms imposed by
     # the SIP convention
     npolfile = fileutil.osfn(pyfits.getval(scifile,'NPOLFILE'))
     npolroot = os.path.split(npolfile)[1]
@@ -123,22 +131,22 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
     print 'WARNING: Updated file ',scifile,' NO LONGER conforms to SIP convention!'
     print '         This file will need to be updated with updatewcs before using with MultiDrizzle.'
     print '=====\n'
-    
+
     # Get info on full-size DGEOFILE
     if dgeofile is None:
         # read in full dgeofile from header
         fulldgeofile = pyfits.getval(scifile,'DGEOFILE')
     else:
         fulldgeofile = dgeofile
-        
+
     print 'Opening full-size DGEOFILE ',fulldgeofile,' for comparison.'
     fulldgeofile = fileutil.osfn(fulldgeofile)
     full_shape = [pyfits.getval(fulldgeofile,'NAXIS2','DX',1),pyfits.getval(fulldgeofile,'NAXIS1','DX',1)]
-    
+
     filter_names = fileutil.getFilterNames(pyfits.getheader(scifile))
 
     detector = pyfits.getval(fulldgeofile,'DETECTOR')
-    # count the number of chips in DGEOFILE 
+    # count the number of chips in DGEOFILE
     xyfile = pyfits.open(scifile)
     numchips = 0
     ccdchip = []
@@ -152,7 +160,7 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
                 ccdchip.append(1)
     if not match_sci:
         ltv1 = 0
-        ltv2 = 0  
+        ltv2 = 0
         nx = full_shape[1]
         ny = full_shape[0]
     else:
@@ -170,13 +178,14 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
     ygarr = yarr.reshape(grid[1],grid[0])
 
     # initialize plot here
-    pl.clf()
-    pl.gray()
-    
+    if has_matplotlib:
+        pl.clf()
+        pl.gray()
+
     for chip,det in zip(range(1,numchips+1),ccdchip):
 
         xout,yout = transform_d2im_dgeo(scifile,chip,xarr,yarr)
-        
+
         dgeochip = 1
         dgeo = pyfits.open(fulldgeofile)
         for e in dgeo:
@@ -187,36 +196,43 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
                     dgeochip = e.header['extver']
                     break
         dgeo.close()
-        
-        print 'Matching sci,',chip,' with DX,',dgeochip
+
+        print 'Matching sci,', chip, ' with DX,', dgeochip
         dx= (xout-xarr).reshape(grid[1],grid[0])
         fulldatax = pyfits.getdata(fulldgeofile,'DX',dgeochip)
         diffx=(dx-fulldatax[-ltv2:-ltv2+ny,-ltv1:-ltv1+nx]).astype(np.float32)
-        
-        pl.imshow(diffx,vmin=vmin,vmax=vmax)
-        pl.title('dx-full_x: %s %s(DX,%d) with %g +/- %g'%(filter_names,detector,dgeochip,diffx.mean(),diffx.std()))
-        pl.colorbar()
-        
-        raw_input("Press 'ENTER' to close figure and plot DY...")
-        pl.close()
+
+        if has_matplotlib:
+            pl.imshow(diffx, vmin=vmin, vmax=vmax)
+            pl.title('dx-full_x: %s %s(DX,%d) with %g +/- %g' %
+                     (filter_names, detector, dgeochip, diffx.mean(),
+                       diffx.std()))
+            pl.colorbar()
+
+            raw_input("Press 'ENTER' to close figure and plot DY...")
+            pl.close()
 
         dy= (yout-yarr).reshape(grid[1],grid[0])
         fulldatay = pyfits.getdata(fulldgeofile,'DY',dgeochip)
         diffy=(dy-fulldatay[-ltv2:-ltv2+ny,-ltv1:-ltv1+nx]).astype(np.float32)
 
-        pl.imshow(diffy,vmin=vmin,vmax=vmax)
-        pl.title('dy-full_y: %s %s(DY,%d) with %g +/- %g '%(filter_names,detector,dgeochip,diffy.mean(),diffy.std()))
-        pl.colorbar()
+        if has_matplotlib:
+            pl.imshow(diffy,vmin=vmin,vmax=vmax)
+            pl.title('dy-full_y: %s %s(DY,%d) with %g +/- %g ' %
+                     (filter_names, detector, dgeochip, diffy.mean(),
+                      diffy.std()))
+            pl.colorbar()
 
-        raw_input("Press 'ENTER' to close figure and show next chip...")
-        pl.close()
+            raw_input("Press 'ENTER' to close figure and show next chip...")
+            pl.close()
+
         if output:
             # parse out rootname from input file if user wants results written to file
             outroot = fileutil.buildNewRootname(scifile)
             #
             # setup DGEOFILE ref file as template for each chip's output results
             # we only need dx,1 and dy,1 since each chip will be written out
-            # to a separate file and since we will use this template for 
+            # to a separate file and since we will use this template for
             # writing out 2 different results files
             #
             fhdulist = pyfits.open(fulldgeofile)
@@ -225,8 +241,8 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
             hdulist.append(fhdulist['dx',1])
             hdulist.append(fhdulist['dy',1])
             fhdulist.close()
-            
-            outname = outroot+'_sci'+str(chip)+'_dgeo_diffxy.match'            
+
+            outname = outroot+'_sci'+str(chip)+'_dgeo_diffxy.match'
             if os.path.exists(outname): os.remove(outname)
             dxgarr = xgarr+diffx
             dygarr = ygarr+diffy
@@ -234,14 +250,14 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
                                                 ygarr[plot_offset::plot_samp,plot_offset::plot_samp].flatten(),
                                                 dxgarr[plot_offset::plot_samp,plot_offset::plot_samp].flatten(),
                                                 dygarr[plot_offset::plot_samp,plot_offset::plot_samp].flatten()],format="%20.8f",append=True)
-            
+
             outname = outroot+'_sci'+str(chip)+'_newfull_dxy.fits'
             if os.path.exists(outname): os.remove(outname)
 
             hdulist['dx',1].data = dx
             hdulist['dy',1].data = dy
             hdulist.writeto(outname)
-            
+
             outname = outroot+'_sci'+str(chip)+'_diff_dxy.fits'
             if os.path.exists(outname): os.remove(outname)
             hdulist['dx',1].data = diffx
@@ -250,10 +266,10 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
             print 'Created output file with differences named: ',outname
 
         del dx,dy,diffx,diffy
-            
+
     if output:
         hdulist.close()
-        
+
 def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
     if update:
         # update input SCI file to be consistent with reference files in header
@@ -272,7 +288,7 @@ def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
     detector = pyfits.getval(fulldgeofile,'DETECTOR')
     filter_names = fileutil.getFilterNames(pyfits.getheader(subarray))
 
-    # count the number of chips in subarray image 
+    # count the number of chips in subarray image
     xyfile = pyfits.open(subarray)
     numchips = 0
     ccdchip = []
@@ -291,8 +307,8 @@ def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
     ltv2 = xyfile['sci',1].header['ltv2']
     xyfile.close()
 
-    # build grid of points for full-size image for 
-    #    chips corresponding to subarray 
+    # build grid of points for full-size image for
+    #    chips corresponding to subarray
     xyfile = pyfits.open(full_sci)
     fullchip = []
     for extn in xyfile:
@@ -308,18 +324,19 @@ def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
     fnx = pyfits.getval(full_sci,'NAXIS1','sci',1)
     fny = pyfits.getval(full_sci,'NAXIS2','sci',1)
     fxarr,fyarr = build_grid_arrays(fnx,fny,1)
-    
+
     # initialize plot here
-    pl.clf()
-    pl.gray()
-    
+    if has_matplotlib:
+        pl.clf()
+        pl.gray()
+
     for chip,det,fext in zip(range(1,numchips+1),ccdchip,fullchip):
-        # Compute the correction imposed by the D2IM+DGEO corrections 
+        # Compute the correction imposed by the D2IM+DGEO corrections
         #   on the subarray
         sxout,syout = transform_d2im_dgeo(subarray,det[1],sxarr,syarr)
         sdx= (sxout-sxarr).reshape(sny,snx)
         sdy= (syout-syarr).reshape(sny,snx)
-        # Compute the correction imposed by the D2IM+DGEO corrections 
+        # Compute the correction imposed by the D2IM+DGEO corrections
         #    on the full sized SCI image
         fxout,fyout = transform_d2im_dgeo(full_sci,fext[1],fxarr,fyarr)
         fdx= (fxout-fxarr).reshape(fny,fnx)
@@ -327,28 +344,30 @@ def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
 
         # determine the difference
         diffx = (sdx - fdx[full_range[0],full_range[1]]).astype(np.float32)
-        pl.imshow(diffx)
-        pl.title('sub_dx-full_x: %s %s[%d:%d,%d:%d] with %g +/- %g'%
-            (filter_names,detector,full_range[0].start,full_range[0].stop,
-             full_range[1].start,full_range[1].stop,
-             diffx.mean(),diffx.std()))
-        pl.colorbar()
-        
-        raw_input("Press 'ENTER' to close figure and plot DY...")
-        pl.close()
-        
+        if has_matplotlib:
+            pl.imshow(diffx)
+            pl.title('sub_dx-full_x: %s %s[%d:%d,%d:%d] with %g +/- %g' %
+                     (filter_names, detector, full_range[0].start,
+                      full_range[0].stop, full_range[1].start,
+                      full_range[1].stop, diffx.mean(),diffx.std()))
+            pl.colorbar()
+
+            raw_input("Press 'ENTER' to close figure and plot DY...")
+            pl.close()
+
         # determine the difference
         diffy = (sdy - fdy[full_range[0],full_range[1]]).astype(np.float32)
-        pl.imshow(diffy)
-        pl.title('sub_dy-full_y: %s %s[%d:%d,%d:%d] with %g +/- %g'%
-            (filter_names,detector,full_range[0].start,full_range[0].stop,
-             full_range[1].start,full_range[1].stop,
-             diffy.mean(),diffy.std()))
-        pl.colorbar()
-        
-        raw_input("Press 'ENTER' to close figure and exit...")
-        pl.close()
-        
+        if has_matplotlib:
+            pl.imshow(diffy)
+            pl.title('sub_dy-full_y: %s %s[%d:%d,%d:%d] with %g +/- %g' %
+                     (filter_names, detector, full_range[0].start,
+                      full_range[0].stop, full_range[1].start,
+                      full_range[1].stop, diffy.mean(), diffy.std()))
+            pl.colorbar()
+
+            raw_input("Press 'ENTER' to close figure and exit...")
+            pl.close()
+
         if output:
             outname = foutroot+'_sci'+str(chip)+'_newfull_dxy.fits'
             if os.path.exists(outname): os.remove(outname)
@@ -373,7 +392,7 @@ def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
         hdulist.close()
 
 def dgeo_function1(x,y):
-    """ returns the dgeofile array value for pixel(s) x,y 
+    """ returns the dgeofile array value for pixel(s) x,y
         for a simple basic function.
         This will be used to generate a full-sized artificial DGEOFILE that can be
         used to compare with an NPOLFILE generated from this test file.
@@ -381,7 +400,7 @@ def dgeo_function1(x,y):
     return 0.01 + 0.005*(x/4096.0) + 0.005*(y/2048.0)
 
 def dgeo_function2(x,y):
-    """ returns the dgeofile array value for pixel(s) x,y 
+    """ returns the dgeofile array value for pixel(s) x,y
         for a simple basic function.
         This will be used to generate a full-sized artificial DGEOFILE that can be
         used to compare with an NPOLFILE generated from this test file.
@@ -411,9 +430,3 @@ def create_testdgeo(template,output,xfunc=dgeo_function1,yfunc=dgeo_function2):
     o.writeto(output)
     o.close()
     del xarr,yarr
-
-
-
-    
-
-    

@@ -35,7 +35,7 @@ import os
 import sys
 import numpy as np
 import pyfits
-from pytools import parseinput, teal
+from stsci.tools import parseinput, teal
 from calcos import ccos
 
 DAYS_PER_YEAR = 365.25

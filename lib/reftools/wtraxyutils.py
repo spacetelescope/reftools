@@ -5,8 +5,8 @@ import numpy as np
 
 import pyfits
 import pylab as pl
-import imagestats 
-from pytools import fileutil
+import stsci.imagestats as imagestats
+from stsci.tools import fileutil
 import datetime
 
 

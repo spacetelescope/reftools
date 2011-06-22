@@ -169,7 +169,7 @@ def parseFilters(filters):
 
 def getDate():
     """ Returns a formatted string with the current date.
-        [This is simply a copy of 'getDate()' from pytools.fileutil]
+        [This is simply a copy of 'getDate()' from stsci.tools.fileutil]
     """
     _ltime = _time.localtime(_time.time())
     date_str = _time.strftime('%Y-%m-%dT%H:%M:%S',_ltime)

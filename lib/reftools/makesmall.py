@@ -4,7 +4,7 @@ import pyfits
 import string
 import os
 
-from pytools import fileutil,parseinput
+from stsci.tools import fileutil,parseinput
 import numpy as np
 
 __version__ = '0.3.1'
