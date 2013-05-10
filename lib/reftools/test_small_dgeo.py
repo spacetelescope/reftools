@@ -102,7 +102,7 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
     npolroot = os.path.split(npolfile)[1]
     dxextns = []
     for extn in pyfits.open(npolfile):
-        if extn.header.has_key('extname') and extn.header['extname'] in ['DX','DY']:
+        if 'extname' in extn.header and extn.header['extname'] in ['DX','DY']:
             dxextns.append([extn.header['extname'],extn.header['extver']])
     #dxextns = [['dx',1],['dy',1],['dx',2],['dy',2]]
     ndxextns = len(dxextns)
@@ -152,9 +152,9 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
     ccdchip = []
     extname = xyfile[1].header['EXTNAME']
     for extn in xyfile:
-        if extn.header.has_key('extname') and extn.header['extname'] == extname:
+        if 'extname' in extn.header and extn.header['extname'] == extname:
             numchips += 1
-            if extn.header.has_key('ccdchip'):
+            if 'ccdchip' in extn.header:
                 ccdchip.append(extn.header['ccdchip'])
             else:
                 ccdchip.append(1)
@@ -189,7 +189,7 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
         dgeochip = 1
         dgeo = pyfits.open(fulldgeofile)
         for e in dgeo:
-            if not e.header.has_key('ccdchip'):
+            if 'ccdchip' not in e.header:
                 continue
             else:
                 if e.header['ccdchip'] == det:
@@ -294,9 +294,9 @@ def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
     ccdchip = []
     extname = xyfile[1].header['EXTNAME']
     for extn in xyfile:
-        if extn.header.has_key('extname') and extn.header['extname'] == extname:
+        if 'extname' in extn.header and extn.header['extname'] == extname:
             numchips += 1
-            if extn.header.has_key('ccdchip'):
+            if 'ccdchip' in extn.header:
                 ccdchip.append([extn.header['ccdchip'],extn.header['extver']])
             else:
                 ccdchip.append([1,1])
@@ -312,7 +312,7 @@ def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
     xyfile = pyfits.open(full_sci)
     fullchip = []
     for extn in xyfile:
-        if (extn.header.has_key('extname') and extn.header['extname'] == extname) and \
+        if ('extname' in extn.header and extn.header['extname'] == extname) and \
         extn.header['ccdchip'] == ccdchip[0][0]:
             fullchip.append([extn.header['ccdchip'],extn.header['extver']])
     xyfile.close()

@@ -104,7 +104,7 @@ def get_template_hdr(template,extname,extver=1):
         timg = pyfits.open(template)
         tmax = 1
         for e in timg:
-            if e.header.has_key('extver') and e.header['extver'] > tmax:
+            if 'extver' in e.header and e.header['extver'] > tmax:
                 tmax = e.header['extver']
         timg.close()
         if extver > tmax:

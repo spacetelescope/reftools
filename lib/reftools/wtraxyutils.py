@@ -296,7 +296,7 @@ def transform_dgeo_for_sip(fltimage,update=True):
     
     flt_phdr = pyfits.getheader(fltimage)
     # Start by parsing the input filename and creating the output name
-    if flt_phdr.has_key('ODGEOFIL'):
+    if 'ODGEOFIL' in flt_phdr:
         dxyfname = fileutil.osfn(flt_phdr['ODGEOFIL'])
     else:
         dxyfname = fileutil.osfn(flt_phdr['DGEOFILE'])
@@ -313,7 +313,7 @@ def transform_dgeo_for_sip(fltimage,update=True):
     dxyin = pyfits.open(dxyfname)
     numchips = 0
     for extn in dxyin:
-        if extn.header.has_key('extname') and extn.header['extname'] == 'DX':
+        if 'extname' in extn.header and extn.header['extname'] == 'DX':
             numchips += 1
 
     ## Updated values from makewcs 1.1.1
@@ -361,7 +361,7 @@ def transform_dgeo_for_sip(fltimage,update=True):
     if update:
         flt = pyfits.open(fltimage,mode='update')
         # store original DGEOFILE in a new keyword 
-        if (flt[0].header.has_key('ODGEOFIL') and flt[0].header['ODGEOFIL'] in ['N/A',""]) or not flt[0].header.has_key('ODGEOFIL'):
+        if ('ODGEOFIL' in flt[0].header and flt[0].header['ODGEOFIL'] in ['N/A',""]) or 'ODGEOFIL' not in flt[0].header:
             flt[0].header.update('ODGEOFIL',flt[0].header['DGEOFILE'])
             flt[0].header['DGEOFILE'] = dxyoutname
         flt.flush()

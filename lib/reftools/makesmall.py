@@ -56,7 +56,7 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
     filter1 = None
     filter2 = None
     if filter is None:
-        if dxyfile[0].header.has_key('FILTER1'):
+        if 'FILTER1' in dxyfile[0].header:
             filter1 = dxyfile[0].header['FILTER1']
             filter2 = dxyfile[0].header['FILTER2']
             if filter2 == 'N/A': filter2 = 'CLEAR2S'
@@ -92,7 +92,7 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
     extname = dxyfile[1].header['EXTNAME']
     
     for extn in dxyfile:
-        if extn.header.has_key('extname') and extn.header['extname'] == extname:
+        if 'extname' in extn.header and extn.header['extname'] == extname:
             numchips += 1
 
     # process each chip
@@ -102,7 +102,7 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
             print 'Processing chip from extension: ',xy,',',chip
             onaxis1 = dxyfile[xy,chip].header['NAXIS1']
             onaxis2 = dxyfile[xy,chip].header['NAXIS2']
-            if not dxyfile[xy,chip].header.has_key('CCDCHIP'):
+            if 'CCDCHIP' not in dxyfile[xy,chip].header:
                 ccdchip = 1
             else:
                 ccdchip = dxyfile[xy,chip].header['CCDCHIP']
