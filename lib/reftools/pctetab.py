@@ -1,11 +1,10 @@
 """Functions for ACS PCTETAB reference file.
 
-.. authors:: Pey Lian Lim, Matt Davis
+:Authors: Pey Lian Lim, Matt Davis
 
-.. organization:: Space Telescope Science Institute
+:Organization: Space Telescope Science Institute
 
-*History:*
-
+:History:
     * 2010-08-31 PLL created this module.
     * 2010-11-09 PLL added RN2_NIT keyword and updated documentation.
     * 2011-04-25 MRD updated for new CTE algorithm parameters
