@@ -8,3 +8,4 @@ JUL 2011 M. Davis added time dependent CHG_LEAK# extensions
 JUL 2011 M. Davis added time dependent CTE scaling extension
 NOV 2011 M. Davis updated parameters for CTE algorithm version 3.0
 JAN 2012 M. Davis updated parameters for CTE algorithm version 3.1
+AUG 2013 P. L. Lim removed overscan from COL_SCALE for CALACS 8.2
