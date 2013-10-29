@@ -35,15 +35,6 @@ from pysynphot import refs
 # LOCAL
 from . import graphfile as sgf
 
-# some things for doing compute values with synphot
-try:
-    from pyraf import iraf
-    from iraf import stsdas, hst_calib, synphot
-except ImportError:
-    HAVESYNPHOT = False
-else:
-    HAVESYNPHOT = True
-
 
 __version__ = '0.3.1'
 __vdate__ = '13-Mar-2012'
@@ -98,8 +89,8 @@ def computeSynphotValues(obsmode):
         Dictionary with photometry keywords as keys.
 
     """
-    if not HAVESYNPHOT:
-      raise ImportError('IRAF packages are not available.')
+    from pyraf import iraf
+    from iraf import stsdas, hst_calib, synphot
 
     tmpfits = os.path.join(tempfile.gettempdir(),'temp.fits')
 
