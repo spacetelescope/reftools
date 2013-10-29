@@ -23,6 +23,7 @@ import time as _time
 from collections import OrderedDict
 
 # THIRD-PARTY
+import astropy
 import numpy as np
 from astropy import log
 from astropy.io import fits as pyfits
@@ -36,8 +37,8 @@ from pysynphot import refs
 from . import graphfile as sgf
 
 
-__version__ = '0.3.1'
-__vdate__ = '13-Mar-2012'
+__version__ = '0.3.2'
+__vdate__ = '29-Oct-2012'
 
 
 def computeValues(obsmode, component_dict):
@@ -247,7 +248,7 @@ def makePrimaryHDU(filename,numpars,instrument,pedigree):
     phdu.header.update('graphtab',os.path.basename(d['graphtable']),comment='HST Graph table')
     phdu.header.update('comptab',os.path.basename(d['comptable']),comment='HST Components table')
     phdu.header.update('useafter','')
-    phdu.header.update('origin','stsci-pyfits',comment='pyfits version %s' % (pyfits.__version__,))
+    phdu.header.update('origin','astropy-fits',comment='astropy version %s' % (astropy.__version__,))
     phdu.header.update('pedigree',pedigree)
     phdu.header.update('descrip','photometry keywords reference file')
 
@@ -426,8 +427,11 @@ def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
                     f = fpars[i].upper()
                     nelem = len(filtdata[f])
                     nelem_rows[nr,i] = nelem
-                    pvals.append(np.array(filtdata[f]))
-                    parnames_rows[nr,i] = f
+                    if filtdata[f] == '':
+                        pvals.append(np.array([0]))
+                    else:
+                        pvals.append(np.array(filtdata[f]))
+                        parnames_rows[nr,i] = f
                 else:
                     pvals.append(np.array([0]))
 
@@ -478,6 +482,8 @@ def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
 
         # Use these obsmodes to generate all the values needed for the row
         nmodes = len(olist)
+        if nmodes == 0 and verbose:
+            log.warn('No info for {0}'.format(obsmode))
 
         pflam = np.zeros(nmodes,np.float64)
         pplam = np.zeros(nmodes,np.float64)
@@ -503,7 +509,7 @@ def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
                     parnames_rows = np.delete(parnames_rows, nr, 0)
 
                     if verbose:
-                        log.info('Skipping {0}\n'.format(obsmode))
+                        log.info('\tSkipping {0}'.format(obsmode))
 
                     break
                 elif e.message == 'math domain error':
@@ -511,7 +517,7 @@ def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
                     skipped_obs.append(obsmode)
 
                     if verbose:
-                        log.info('Skipping {0}\n'.format(obsmode))
+                        log.info('\tSkipping {0}'.format(obsmode))
 
                     flam_datacol_vals.pop(nr)
                     plam_datacol_vals.pop(nr)
@@ -525,7 +531,7 @@ def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
                     raise
 
             if verbose:
-                log.info('PHOTFLAM({0}) = {1}\n'.format(fullmode, value['PHOTFLAM']))
+                log.info('\tPHOTFLAM({0}) = {1}'.format(fullmode, value['PHOTFLAM']))
 
             pflam[n] = value['PHOTFLAM']
             pplam[n] = value['PHOTPLAM']
@@ -638,7 +644,7 @@ def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
     # namely, the PAR<n>VALUES and NELEM<n> columns
     for p in range(max_npars):
         nelem_tabcols.append(Column(name="NELEM"+str(p+1),format="I",array=nelem_cols[p]))
-        parvals_tabcols.append(Column(name="PAR"+str(p+1)+"VALUES",format="PD[]",array=parvals_cols[p]))
+        parvals_tabcols.append(Column(name="PAR"+str(p+1)+"VALUES",format="PD()",array=parvals_cols[p]))
         parnames_tabcols.append(Column(name="PAR"+str(p+1)+"NAMES",format=parnames_format,array=parnames_cols[p]))
 
     # create the set of results columns
@@ -653,7 +659,7 @@ def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
             pcols = plam_cols[p]
             bcols = bw_cols[p]
         else:
-            format_str = 'PD[]'
+            format_str = 'PD()'
             pstr = str(p)
             fcols = flam_cols[p]
             pcols = plam_cols[p]
