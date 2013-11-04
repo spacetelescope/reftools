@@ -9,7 +9,8 @@ Example
 =======
 
 >>> from reftools import mkimphttab
->>> mkimphttab.createTable('acs_hrc_imp.fits','acs,hrc')
+>>> mkimphttab.createTable('acs_hrc_imp.fits', 'acs,hrc', detector='HRC',
+...                        useafter='Mar 01 2002 00:00:00')
 
 """
 from __future__ import print_function, division  # confidence high
@@ -37,8 +38,8 @@ from pysynphot import refs
 from . import graphfile as sgf
 
 
-__version__ = '0.3.2'
-__vdate__ = '29-Oct-2012'
+__version__ = '0.3.3'
+__vdate__ = '04-Nov-2012'
 
 
 def computeValues(obsmode, component_dict):
@@ -228,7 +229,8 @@ def getDate():
     return date_str
 
 
-def makePrimaryHDU(filename,numpars,instrument,pedigree):
+def makePrimaryHDU(filename, numpars, instrument, pedigree,
+                   detector='', useafter=''):
     """Create a Primary Header for the multi-extension FITS reference table.
 
     """
@@ -242,12 +244,12 @@ def makePrimaryHDU(filename,numpars,instrument,pedigree):
     phdu.header.update('parnum',numpars,comment='Number of parameterized variables')
     phdu.header.update('dbtable','IMPHTTAB')
     phdu.header.update('instrume',instrument)
-    phdu.header.update('detector','')
+    phdu.header.update('detector', detector)
     phdu.header.update('synswver',S.__version__,comment='Version of synthetic photometry software')
     phdu.header.update('mktabver',__version__,comment='Version of reftools.mkimphttab')
     phdu.header.update('graphtab',os.path.basename(d['graphtable']),comment='HST Graph table')
     phdu.header.update('comptab',os.path.basename(d['comptable']),comment='HST Components table')
-    phdu.header.update('useafter','')
+    phdu.header.update('useafter', useafter)
     phdu.header.update('origin','astropy-fits',comment='astropy version %s' % (astropy.__version__,))
     phdu.header.update('pedigree',pedigree)
     phdu.header.update('descrip','photometry keywords reference file')
@@ -271,8 +273,9 @@ def saveSkippedObsmodes(output, obsmodes):
     f.close()
 
 
-def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
-                mode_list = [],nmodes=None,clobber=True,verbose=False):
+def createTable(output, basemode, tmgtab=None, tmctab=None, tmttab=None,
+                mode_list=[], nmodes=None, detector='', useafter='',
+                clobber=True, verbose=False):
     """Create an IMPHTTAB file for a specified base configuration (basemode).
 
     Parameters
@@ -307,6 +310,12 @@ def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
     nmodes : int, optional
       Set to limit the number of modes to calculate, useful for testing.
       Defaults to None.
+
+    detector : str
+      Value for DETECTOR in primary header.
+
+    useafter : str
+      Value for USEAFTER in primary header.
 
     clobber : bool, optional
       True to overwrite an existing reference file, False to raise an error
@@ -672,7 +681,8 @@ def createTable(output,basemode,tmgtab=None,tmctab=None,tmttab=None,
     log.info('Creating full table: {0}'.format(output))
     # Now create the FITS file with the table in each extension
 
-    phdu = makePrimaryHDU(output,max_npars,basemode.split(',')[0],ped_vals[0])
+    phdu = makePrimaryHDU(output, max_npars, basemode.split(',')[0],
+                          ped_vals[0], detector=detector, useafter=useafter)
     flam_tab = pyfits.new_table([obsmode_col,datacol_col['PHOTFLAM']]+flam_tabcols+parnames_tabcols+parvals_tabcols+nelem_tabcols+[pedigree_col,descrip_col])
     flam_tab.header.update('extname','PHOTFLAM')
     flam_tab.header.update('extver',1)
