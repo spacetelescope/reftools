@@ -15,6 +15,14 @@ to use the `GetPhotPars` class. For example::
     ...
   get_phot.close()
 
+4/2014  MLS Made this more general to accept IMPHTTAB files which 
+have any number of extensions, and where the NAME of the phot keyword
+is the name of the extension (as already is the practice). This is done
+to accommodate new WFC3 tables with 5 extensions
+
+Right now, the only values that pysynphot computes are 
+PHOTFLAM, PHOTPLAM and PHOTBW
+
 """
 
 import pyfits
@@ -22,8 +30,8 @@ import numpy as np
 
 import _computephotpars
 
-__version__ = '0.1.1'
-__vdate__ = '01-Aug-2011'
+__version__ = '0.1.2'
+__vdate__ = '15-Apr-2014'
 
 class ImphttabError(StandardError):
   """
@@ -32,9 +40,11 @@ class ImphttabError(StandardError):
   """
   pass
 
+
 def get_phot_pars(obsmode, imphttab):
   """
-  Return PHOTZPT, PHOTFLAM, PHOTPLAM, and PHOTBW for specified obsmode
+  Return PHOTZPT, PHOTFLAM, PHOTPLAM, and PHOTBW and any other
+  keywords outlined in the table for specified obsmode
   and imphttab.
   
   Parameters
@@ -55,23 +65,17 @@ def get_phot_pars(obsmode, imphttab):
   photzpt : float
     PHOTZPT from IMPHTTAB header.
     
-  photflam : float
-    Interpolated PHOTFLAM for `obsmode`.
+  results_dict: dict
+    dictionary containing the photometric keyword results
     
-  photplam : float
-    Interpolated PHOTPLAM for `obsmode`.
-    
-  photbw : float
-    Interpolated PHOTBW for `obsmode`.
-  
   """
   get_phot = GetPhotPars(imphttab)
   
-  photzpt, photflam, photplam, photbw = get_phot.get_phot_pars(obsmode)
+  results_dict = get_phot.get_phot_pars(obsmode)
   
   get_phot.close()
   
-  return photzpt, photflam, photplam, photbw
+  return results_dict
 
 class GetPhotPars(object):
   """
@@ -105,9 +109,18 @@ class GetPhotPars(object):
     self.imphttab_name = imphttab
     self.imphttab_fits = pyfits.open(imphttab,'readonly')
     
+    #check the extensions in the file, each contains a phot key
+    self._nextend=self.imphttab_fits[0].header['NEXTEND']
+    self._parkeys=list()
+    for ext in range(1,self._nextend+1,1):
+        self._parkeys.append(self.imphttab_fits[ext].header['EXTNAME'])
+    
+    #everything not in compute keys will just return the row value
+    self._compute_keys=["photflam","photplam","photbw"]
+    
   def get_phot_pars(self,obsmode):
     """
-    Return PHOTZPT, PHOTFLAM, PHOTPLAM, and PHOTBW for specified obsmode.
+    Return the required keywords for the specified obsmode
     
     Parameters
     ----------
@@ -116,18 +129,11 @@ class GetPhotPars(object):
       
     Returns
     -------
-    photzpt : float
-      PHOTZPT from `imphttab_fits` header.
       
-    photflam : float
-      Interpolated PHOTFLAM for `obsmode`.
-      
-    photplam : float
-      Interpolated PHOTPLAM for `obsmode`.
-      
-    photbw : float
-      Interpolated PHOTBW for `obsmode`.
-    
+    results_dict: dict
+        dictionary of phot keyword results
+        each key corresponds to one keyword and it's value
+              
     """
     
     npars, strp_obsmode, par_dict = self._parse_obsmode(obsmode)
@@ -136,17 +142,20 @@ class GetPhotPars(object):
     
     result_dict = {}
     
-    for par in ('photflam','photplam','photbw'):
+    for par in self._parkeys:
       row = self._get_row(strp_obsmode, par)
       
       row_struct = self._make_row_struct(row,npars)
       
-      result_dict[par] = self._compute_value(row_struct, par_struct)
-      
-    photzpt = self.imphttab_fits[0].header['photzpt']
+      #compute_value returns a float
+      if par in self._compute_keys:
+          result_dict[par] = self._compute_value(row_struct, par_struct)
+      else:
+          result_dict[par] = row_struct["results"][0]
+           
+    result_dict["PHOTZPT"] = self.imphttab_fits[0].header['PHOTZPT']
     
-    return (photzpt, result_dict['photflam'],
-            result_dict['photplam'], result_dict['photbw'])
+    return result_dict
     
   def close(self):
     """
@@ -335,4 +344,10 @@ class GetPhotPars(object):
       Result returned by `_computephotpars.compute_value`.
     
     """
+    
     return _computephotpars.compute_value(row_struct, par_struct)
+
+    
+    
+    
+    
