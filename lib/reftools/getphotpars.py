@@ -61,10 +61,7 @@ def get_phot_pars(obsmode, imphttab):
     Path and filename of IMPHTTAB reference file.
     
   Returns
-  -------
-  photzpt : float
-    PHOTZPT from IMPHTTAB header.
-    
+  -------    
   results_dict: dict
     dictionary containing the photometric keyword results
     
@@ -74,6 +71,7 @@ def get_phot_pars(obsmode, imphttab):
   results_dict = get_phot.get_phot_pars(obsmode)
   
   get_phot.close()
+
   
   return results_dict
 

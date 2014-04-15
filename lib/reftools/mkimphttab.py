@@ -21,14 +21,6 @@ from pysynphot import refs
 
 # LOCAL
 from . import graphfile as sgf
-"""
-MLS -I update create_table_from_table, which now looks for static extensions (ie more than 3)
-and appends them to the output file. two more extensions for WFC3 imphttab were added, which has
-PHTFLAM1 and PHTFLAM2 in addition to the other extensions. These new keywords are calculated by
-the team, not pysynphot and are scaling factors for chip2 UVIS data to normalize the photometry 
-between the chips.
-
-"""
 
 __all__ = ['create_table', 'create_nicmos_table', 'create_table_from_table']
 __version__ = '0.5'
@@ -797,11 +789,6 @@ def create_table_from_table(output, useafter, imphttab, **kwargs):
 
     kwargs : dict
         Keywords accepted by :func:`create_table`, except ``mode_list``.
-
-
-    MLS: There are only the 3 computed extensions, but some instruments
-    have static extensions which must also be conveyed (and then updated
-    by the group before delivery). WFC3 PHTFLAM1/2 are examples of this.
 
 
     """
