@@ -9,10 +9,14 @@ def test_mkimphttab():
   
   output = os.path.join(tempdir, 'test_out_imp.fits')
   
-  test_mode = 'acs,sbc'
+  base_mode = 'acs,sbc'
+  
+  useafter='DUMMY'
+  
+  detector='sbc'
   
   try:
-    mkimphttab.createTable(output, test_mode)
+    mkimphttab.create_table(output, base_mode, detector, useafter)
   
   except:
     if os.path.exists(output):
