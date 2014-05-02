@@ -272,67 +272,72 @@ class TestGetPhotParsFunc(TestCase):
     obsmode = 'acs,wfc1,f625w,f660n'
     imphttab = 'test_data/test_wfc1_dev_imp.fits'
 
-    zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(zpt,-21.1)
-    self.assertEqual(flam,5.8962401031019617e-18)
-    self.assertEqual(plam,6599.6045327828697)
-    self.assertEqual(bw,13.622138313347964)
+    results=getphotpars.get_phot_pars(obsmode, imphttab)
+    
+    self.assertEqual(results["PHOTZPT"],-21.1)
+    tools.assert_almost_equals(results["PHOTFLAM"],5.8962401031019617e-18)
+    tools.assert_almost_equals(results["PHOTPLAM"],6599.6045327828697)
+    tools.assert_almost_equals(results["PHOTBW"],13.622138313347964)
 
   def test_1_old(self):
     obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
     imphttab = 'test_data/test_wfc1_dev_imp.fits'
 
-    zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
+    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
+    results=getphotpars.get_phot_pars(obsmode, imphttab)
 
-    self.assertEqual(zpt,-21.1)
-    tools.assert_almost_equals(flam,8.43940563e-18,25)
-    tools.assert_almost_equals(plam,6992.37762323,8)
-    tools.assert_almost_equals(bw,58.85223114,8)
+    self.assertEqual(results["PHOTZPT"],-21.1)
+    tools.assert_almost_equals(results["PHOTFLAM"],8.43940563e-18)
+    tools.assert_almost_equals(results["PHOTPLAM"],6992.37762323)
+    tools.assert_almost_equals(results["PHOTBW"],58.85223114)
 
   def test_2_old(self):
     obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
     imphttab = 'test_data/test_wfc1_dev_imp.fits'
 
-    zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(zpt,-21.1)
-    tools.assert_almost_equals(flam,5.99660350e-14,21)
-    tools.assert_almost_equals(plam,5737.95131007,8)
-    tools.assert_almost_equals(bw,643.42528984,8)
+    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
+    results=getphotpars.get_phot_pars(obsmode, imphttab)
+    
+    self.assertEqual(results["PHOTZPT"],-21.1)
+    tools.assert_almost_equals(results["PHOTFLAM"],5.99660350e-14)
+    tools.assert_almost_equals(results["PHOTPLAM"],5737.95131007)
+    tools.assert_almost_equals(results["PHOTBW"],643.42528984)
 
   def test_0_new(self):
     obsmode = 'acs,wfc1,f625w,f660n'
     imphttab = 'test_data/test_acs_wfc1_dev_imp.fits'
 
-    zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(zpt,-21.1)
-    self.assertEqual(flam,5.8962401031019617e-18)
-    self.assertEqual(plam,6599.6045327828697)
-    self.assertEqual(bw,13.622138313347964)
+    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
+    results=getphotpars.get_phot_pars(obsmode, imphttab)
+    
+    self.assertEqual(results["PHOTZPT"],-21.1)
+    tools.assert_almost_equals(results["PHOTFLAM"],5.8962401031019617e-18)
+    tools.assert_almost_equals(results["PHOTPLAM"],6599.6045327828697)
+    tools.assert_almost_equals(results["PHOTBW"],13.622138313347964)
 
   def test_1_new(self):
     obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
     imphttab = 'test_data/test_acs_wfc1_dev_imp.fits'
 
-    zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
+    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
+    results=getphotpars.get_phot_pars(obsmode, imphttab)
 
-    self.assertEqual(zpt,-21.1)
-    tools.assert_almost_equals(flam,8.43940563e-18,25)
-    tools.assert_almost_equals(plam,6992.37762323,8)
-    tools.assert_almost_equals(bw,58.85223114,8)
+    self.assertEqual(results["PHOTZPT"],-21.1)
+    tools.assert_almost_equals(results["PHOTFLAM"],8.43940563e-18,25)
+    tools.assert_almost_equals(results["PHOTPLAM"],6992.37762323,8)
+    tools.assert_almost_equals(results["PHOTBW"],58.85223114,8)
 
   def test_2_new(self):
     obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
     imphttab = 'test_data/test_acs_wfc1_dev_imp.fits'
 
-    zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
+    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
+    results=getphotpars.get_phot_pars(obsmode, imphttab)
 
-    self.assertEqual(zpt,-21.1)
-    tools.assert_almost_equals(flam,5.99660350e-14,21)
-    tools.assert_almost_equals(plam,5737.95131007,8)
-    tools.assert_almost_equals(bw,643.42528984,8)
+    self.assertEqual(results["PHOTZPT"],-21.1)
+    tools.assert_almost_equals(results["PHOTFLAM"],5.99660350e-14,21)
+    tools.assert_almost_equals(results["PHOTPLAM"],5737.95131007,8)
+    tools.assert_almost_equals(results["PHOTBW"],643.42528984,8)
 
 
 class TestEdgeCase(TestCase):
@@ -340,9 +345,10 @@ class TestEdgeCase(TestCase):
     obsmode = 'acs,wfc1,fr931n#8905'
     imphttab = 'test_data/test_acs_wfc1_dev_imp.fits'
 
-    zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(zpt,-21.1)
-    tools.assert_almost_equals(flam,1.4852052585262792e-18,21)
-    tools.assert_almost_equals(plam,8903.8757202468823,8)
-    tools.assert_almost_equals(bw,64.255181883310669,8)
+    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
+    results=getphotpars.get_phot_pars(obsmode, imphttab)
+    
+    self.assertEqual(results["PHOTZPT"],-21.1)
+    tools.assert_almost_equals(results["PHOTFLAM"],1.4852052585262792e-18,21)
+    tools.assert_almost_equals(results["PHOTPLAM"],8903.8757202468823,8)
+    tools.assert_almost_equals(results["PHOTBW"],64.255181883310669,8)

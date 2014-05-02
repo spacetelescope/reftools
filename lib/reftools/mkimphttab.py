@@ -22,14 +22,13 @@ from pysynphot import refs
 # LOCAL
 from . import graphfile as sgf
 
-
 __all__ = ['create_table', 'create_nicmos_table', 'create_table_from_table']
-__version__ = '0.4'
-__vdate__ = '04-Nov-2012'
+__version__ = '0.5'
+__vdate__ = '05-Nov-2013'
 
 
 def compute_values(obsmode, component_dict):
-    """Compute the 3 photometric values needed for a given
+    """Compute the 3 basic photometric values needed for a given
     observation mode string using `pysynphot`.
 
     Values calculated:
@@ -353,6 +352,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
 
     verbose : bool, optional
         Display extra information.
+
 
     """
     if not output.endswith('_imp.fits'):
@@ -774,13 +774,13 @@ def create_nicmos_table(output, detector, useafter, pht_table, **kwargs):
     create_table(output, 'nicmos', **kwargs)
 
 
-def create_table_from_table(output, detector, useafter, imphttab, **kwargs):
+def create_table_from_table(output, useafter, imphttab, **kwargs):
     """Use a previously created IMPHTTAB reference file to generate a new
     IMPHTTAB reference file.
 
     Parameters
     ----------
-    output, detector, useafter : str
+    output, useafter : str
         See :func:`create_table`.
 
     imphttab : str
@@ -790,9 +790,34 @@ def create_table_from_table(output, detector, useafter, imphttab, **kwargs):
     kwargs : dict
         Keywords accepted by :func:`create_table`, except ``mode_list``.
 
+
     """
+    nextend=3 #default number of computed extensions
+    extra_exten=list()
+    
     with fits.open(imphttab) as imp:
-        inst = imp[0].header['instrume']
-        modes = np.char.strip(imp[1].data['obsmode']).tolist()
+        detector=imp[0].header['DETECTOR']
+        basemode=''
+        modes = np.char.strip(imp[1].data['OBSMODE']).tolist()
+        #check if there are more than the 3 computed extensions
+        nextend=imp[0].header['NEXTEND']
+        print(nextend)
+        if nextend > 3:
+            for ext in range(4,nextend+1,1):
+                extra_exten.append(imp[ext].header['extname'])            
+    
     kwargs['mode_list'] = modes
-    create_table(output, inst, **kwargs)
+    create_table(output,basemode,detector,useafter, **kwargs)
+        
+    #if there are more than 3 extensions assume they are static and append them to the output file
+    if extra_exten:
+        junkfile=tempfile.NamedTemporaryFile(dir='./',delete=False)
+        print("Adding static extensions to output",extra_exten)
+        with fits.open(imphttab) as imp:
+            with fits.open(output) as outfile:
+                for ext in range(4,nextend+1,1):
+                    outfile.append(imp[ext])
+                outfile.writeto(junkfile.name)
+        os.remove(output)
+        os.rename(junkfile.name,output)
+
