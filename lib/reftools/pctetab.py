@@ -26,6 +26,7 @@ from __future__ import division, print_function
 
 # External modules
 import glob
+import sys
 import os
 
 # THIRD-PARTY
@@ -37,7 +38,7 @@ __version__ = '1.2.0'
 __vdata__ = '13-Aug-2013'
 
 
-class PCTEFileError(StandardError):
+class PCTEFileError(Exception):
     """Generic exception for errors in this module."""
     pass
 
@@ -131,7 +132,7 @@ class _Text2Fits(object):
             self.header.header['DETECTOR'] = 'WFC'
         else:
             raise PCTEFileError('Detector not supported: {0:s}'.format(
-                unicode(detector)))
+                str(detector)))
 
         # Optional HISTORY
         if os.path.isfile(history_file):
@@ -178,7 +179,7 @@ class _Text2Fits(object):
 
         """
         if not os.path.isfile(dtde_file):
-            raise IOError('Invalid dtde file: {0:s}'.format(unicode(dtde_file)))
+            raise IOError('Invalid dtde file: {0:s}'.format(str(dtde_file)))
 
         lRange, colName, colData, colForm, colUnit = 0, {}, {}, {}, {}
 
@@ -242,7 +243,7 @@ class _Text2Fits(object):
         """
         if not os.path.isfile(chg_leak_file):
             raise IOError('Invalid charge leak file: {0:s}'.format(
-                unicode(chg_leak_file)))
+                str(chg_leak_file)))
 
         colRange, colName, colData, colForm, colUnit = 0, {}, {}, {}, {}
 
@@ -320,7 +321,7 @@ class _Text2Fits(object):
         """
         if not os.path.isfile(levels_file):
             raise IOError('Invalid levels file: {0:s}'.format(
-                unicode(levels_file)))
+                str(levels_file)))
 
         colData = []
 
@@ -367,7 +368,7 @@ class _Text2Fits(object):
         """
         if not os.path.isfile(scale_file):
             raise IOError('Invalid scale file: {0:s}'.format(
-                unicode(scale_file)))
+                str(scale_file)))
 
         lRange, colName, colData, colForm, colUnit = 0, {}, {}, {}, {}
 
@@ -426,7 +427,7 @@ class _Text2Fits(object):
         """
         if not os.path.isfile(column_file):
             raise IOError('Invalid column scale file: {0:s}'.format(
-                unicode(column_file)))
+                str(column_file)))
 
         lRange, colName, colData, colForm, colUnit = 0, {}, {}, {}, {}
 
@@ -650,7 +651,7 @@ def MakePCTETab(out_name, dtde_file, chg_leak_file, levels_file, scale_file,
 
     # test for the presence of the input files
     if not os.path.isfile(dtde_file):
-        raise IOError('Invalid dtde file: {0:s}'.format(unicode(dtde_file)))
+        raise IOError('Invalid dtde file: {0:s}'.format(str(dtde_file)))
 
     if isinstance(chg_leak_file, str):
         chg_leak_file = glob.glob(chg_leak_file)
@@ -658,19 +659,19 @@ def MakePCTETab(out_name, dtde_file, chg_leak_file, levels_file, scale_file,
     for f in chg_leak_file:
         if not os.path.isfile(f):
             raise IOError('Invalid charge leak file: {0:s}'.format(
-                unicode(chg_leak_file)))
+                str(chg_leak_file)))
 
     nchg_leak = len(chg_leak_file)
 
     if not os.path.isfile(levels_file):
-        raise IOError('Invalid levels file: {0:s}'.format(unicode(levels_file)))
+        raise IOError('Invalid levels file: {0:s}'.format(str(levels_file)))
 
     if not os.path.isfile(scale_file):
-        raise IOError('Invalid scale file: {0:s}'.format(unicode(scale_file)))
+        raise IOError('Invalid scale file: {0:s}'.format(str(scale_file)))
 
     if not os.path.isfile(column_file):
         raise IOError('Invalid column scaling file: {0:s}'.format(
-            unicode(column_file)))
+            str(column_file)))
 
     # make Text2Fits object and run it's methods to construct fits extensions
     t2f = _Text2Fits()
@@ -689,5 +690,5 @@ def MakePCTETab(out_name, dtde_file, chg_leak_file, levels_file, scale_file,
     t2f.make_column_scale(column_file)
 
     # have t2f save the fits file
-    print('Saving file {0:s}'.format(unicode(out_name)))
+    print('Saving file {0:s}'.format(str(out_name)))
     t2f.make_fits()

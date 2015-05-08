@@ -1,7 +1,7 @@
 """ makedxy - Generate DXY reference files from a grid of points
 
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 import os
 import numpy as np
@@ -51,15 +51,15 @@ def run(in_list,output,xstep=64,ystep=64,shape=[2048,4096],template=None,order=1
     fimg.append(phdu)
 
     # Now, start creating each of the extensions
-    for fname,extver in zip(in_list,range(1,len(in_list)+1)):
+    for fname,extver in zip(in_list,list(range(1,len(in_list)+1))):
         if verbose:
-            print 'Converting data from ',fname,' into DXY extensions.'
+            print('Converting data from ',fname,' into DXY extensions.')
         # read in the raw data for each chip from the ASCII file
         x,y,dx,dy = np.loadtxt(fname,usecols=(0,1,2,3),unpack=True)
         # for each axis
         for extname,vals in zip(['DX','DY'],[dx,dy]):
             if verbose:
-                print 'Processing extension ',extname,',',extver
+                print('Processing extension ',extname,',',extver)
             varr = convert_ascii_to_array(x,y,vals)
             if expand:
                 vout = expand_array(varr,shape,spline_order=order)
@@ -82,7 +82,7 @@ def run(in_list,output,xstep=64,ystep=64,shape=[2048,4096],template=None,order=1
     if os.path.exists(output):
         os.remove(output)
     if verbose:
-        print 'Writing out new reference file to: ',output
+        print('Writing out new reference file to: ',output)
     fimg.writeto(output)
     fimg.info()
 
@@ -135,8 +135,8 @@ def expand_array(input,output_shape,spline_order=1):
     # define range of x and y values spanned by input array
     stepx = output_shape[1]//(input.shape[1]-1)
     stepy = output_shape[0]//(input.shape[0]-1)
-    x = np.transpose(np.array([range(0,output_shape[1]+1,stepx)],np.float32))
-    y = np.array([range(0,output_shape[0]+1,stepy)],dtype=np.float32)
+    x = np.transpose(np.array([list(range(0,output_shape[1]+1,stepx))],np.float32))
+    y = np.array([list(range(0,output_shape[0]+1,stepy))],dtype=np.float32)
     # define range of x and y values to be filled in output array
     nx = np.arange(0,output_shape[1],1,dtype=np.int32)
     ny = np.arange(0,output_shape[0],1,dtype=np.int32)
@@ -157,5 +157,5 @@ def expand_array(input,output_shape,spline_order=1):
     return output
 
 def help():
-    print __doc__
-    print run.__doc__
+    print(__doc__)
+    print(run.__doc__)

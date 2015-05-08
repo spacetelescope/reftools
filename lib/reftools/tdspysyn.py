@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """tdspysyn - convert a COS or STIS TDS file to pysynphot throughput files"""
 
-from __future__ import division         # confidence unknown
+from __future__ import division, print_function  # confidence unknown
 
 __author__ = "Phil Hodge, STScI, February 2011."
 __usage__ = """
@@ -45,8 +45,8 @@ def main():
 
     try:
         (options, pargs) = getopt.getopt (sys.argv[1:], "h", ["help"])
-    except Exception, error:
-        print str (error)
+    except Exception as error:
+        print (str(error))
         prtOptions()
         return
 
@@ -58,10 +58,10 @@ def main():
             help = True
 
     if help:
-        print getHelpAsString()
-        # print __doc__
-        # print __usage__
-        # print "\t", __version__ + " (" + __vdate__ + ")"
+        print(getHelpAsString())
+        # print(__doc__)
+        # print(__usage__)
+        # print("\t", __version__ + " (" + __vdate__ + ")")
         return
 
     nargs = len (pargs)
@@ -88,17 +88,17 @@ def main():
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
-    print "The command-line arguments are:"
-    print "  -h (print help)"
-    print "  --help (print help)"
-    print "  input: input TDS file name"
-    print "  outroot: prefix for output names"
-    print "  min_wl: minimum wavelength for pysynphot files"
-    print "  max_wl: maximum wavelength for pysynphot files"
-    print "  dwl: wavelength increment for pysynphot files"
-    print "  thru_mjd: time (MJD) for THROUGHPUT column"
-    print "  last_mjd: last MJD (or 'none') [optional]"
-    print "  row: one-indexed row number in TDS table (or 'none') [optional]"
+    print("The command-line arguments are:")
+    print("  -h (print help)")
+    print("  --help (print help)")
+    print("  input: input TDS file name")
+    print("  outroot: prefix for output names")
+    print("  min_wl: minimum wavelength for pysynphot files")
+    print("  max_wl: maximum wavelength for pysynphot files")
+    print("  dwl: wavelength increment for pysynphot files")
+    print("  thru_mjd: time (MJD) for THROUGHPUT column")
+    print("  last_mjd: last MJD (or 'none') [optional]")
+    print("  row: one-indexed row number in TDS table (or 'none') [optional]")
 
 def tdsToPysynphot (input, outroot, min_wl, max_wl, dwl,
                     thru_mjd, last_mjd=None, row=None):
@@ -208,12 +208,12 @@ def initTds (input, outroot, min_wl, max_wl, dwl, thru_mjd, last_mjd, row):
         nrows = len (ifd[1].data)
         if row < 0 or row >= nrows:
             ifd.close()
-            raise RuntimeError, "`row` is out of range; " \
-                "there are %d rows in the TDS table" % nrows
+            raise RuntimeError("`row` is out of range; " 
+                "there are %d rows in the TDS table" % nrows)
     ifd.close()
     if filetype != "missing" and \
        filetype != "TIME DEPENDENT SENSITIVITY TABLE":
-        print "Warning:  FILETYPE =", filetype
+        print("Warning:  FILETYPE =", filetype)
 
     if instrument == "COS":
         tds = CosTds (input, outroot, min_wl, max_wl, dwl,
@@ -222,7 +222,7 @@ def initTds (input, outroot, min_wl, max_wl, dwl, thru_mjd, last_mjd, row):
         tds = StisTds (input, outroot, min_wl, max_wl, dwl,
                        thru_mjd, last_mjd, row)
     else:
-        raise RuntimeError, "INSTRUME is %s; must be COS or STIS" % instrument
+        raise RuntimeError("INSTRUME is %s; must be COS or STIS" % instrument)
 
     return tds
 
@@ -253,8 +253,8 @@ def expandFilename (filename):
         if count >= MAX_COUNT:
             break
     if not done:
-        raise RuntimeError, "%d iterations exceeded while expanding " \
-                "variables in file name %s" % (MAX_COUNT, filename)
+        raise RuntimeError("%d iterations exceeded while expanding " 
+                "variables in file name %s" % (MAX_COUNT, filename))
     fname = os.path.abspath (fname)             # ../file
     fname = os.path.expanduser (fname)          # ~/file
     real_file_name = os.path.normpath (fname)   # remove redundant strings
@@ -325,7 +325,7 @@ class ConvertTds (object):
         self.ref_time = ifd[1].header.get ("ref_time", "missing")
         self.data = ifd[1].data.copy()
         if row is None:
-            self.rowlist = range (len (self.data))
+            self.rowlist = list(range(len(self.data)))
         else:
             self.rowlist = [row]
         ifd.close()
@@ -548,16 +548,16 @@ class ConvertTds (object):
         """
 
         if self.useafter == "missing":
-            raise RuntimeError, "Keyword USEAFTER is missing " \
-                                "from the primary header."
+            raise RuntimeError("Keyword USEAFTER is missing " 
+                                "from the primary header.")
 
         # The format is expected to be 'month day year hh:mm:ss',
         # for example, "May 11 2009 00:00:00".
         words = self.useafter.split()
         len_words = len (words)
         if len_words < 3 or len_words > 6:
-            raise RuntimeError, "Can't interpret USEAFTER date '%s'" % \
-                                self.useafter
+            raise RuntimeError("Can't interpret USEAFTER date '%s'" % 
+                                self.useafter)
         if words[1].endswith (","):     # allow "May 11, 2009"
             words[1] = words[1][:-1]
         if words[2].endswith (","):     # allow "May 11 2009, 00:00:00"
@@ -566,8 +566,8 @@ class ConvertTds (object):
         months = ["jan", "feb", "mar", "apr", "may", "jun",
                   "jul", "aug", "sep", "oct", "nov", "dec"]
         if month_str not in months:
-            raise RuntimeError, \
-            "Don't understand the month in USEAFTER date '%s'" % self.useafter
+            raise RuntimeError(
+            "Don't understand the month in USEAFTER date '%s'" % self.useafter)
         month = months.index (month_str) + 1    # one-indexed month
         day = int (words[1])
         year = int (words[2])
@@ -575,8 +575,8 @@ class ConvertTds (object):
             hms = words[3].split (":")
             len_hms = len (hms)
             if len_hms < 1 or len_hms > 3:
-                raise RuntimeError, "Can't interpret USEAFTER date '%s'" % \
-                                    self.useafter
+                raise RuntimeError("Can't interpret USEAFTER date '%s'" % 
+                                    self.useafter)
             if len_hms == 1:
                 fraction = float (hms[0]) / 24.
             elif len_hms == 2:
@@ -611,8 +611,8 @@ class CosTds (ConvertTds):
                              thru_mjd, last_mjd, row)
 
         if self.ref_time == "missing":
-            raise RuntimeError, "Keyword REF_TIME is missing " \
-                                "from the table header."
+            raise RuntimeError("Keyword REF_TIME is missing " 
+                                "from the table header.")
 
     def makeFilename (self, row):
         """Create a name for the output COS pysynphot file.
@@ -825,7 +825,7 @@ def getHelpAsString(fulldoc=True):
 tdsToPysynphot.__doc__ = getHelpAsString(fulldoc=False)
 
 def help():
-    print getHelpAsString()
+    print(getHelpAsString())
 
 if __name__ == "__main__":
 
