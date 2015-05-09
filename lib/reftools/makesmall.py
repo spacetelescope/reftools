@@ -1,4 +1,4 @@
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 import pyfits
 import string
@@ -28,29 +28,29 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
     dgeofile = fileutil.osfn(dgeofile)
     dgeoroot = os.path.split(dgeofile)[1]
     if not os.path.exists(dgeofile):
-        print' Input: ',dgeofile
-        raise InputError, "No valid input found! "
+        print(' Input: ',dgeofile)
+        raise InputError("No valid input found! ")
 
     # If column/row correction image is specified, open it for removal from
     # DGEOFILE...
     if colcorr is not None:
         if not os.path.exists(colcorr):
-            raise InputError,'No valid column/row correction image found!'
+            raise InputError('No valid column/row correction image found!')
         
         # User specified a column/row correction image to be subtracted from
         # full DGEOFILE before resampling
         corrimg = pyfits.open(colcorr,'readonly')
     else:
-        print "======"
-        print 'No column/row correction removed from DGEOFILE before resampling.'
-        print "======"
+        print("======")
+        print('No column/row correction removed from DGEOFILE before resampling.')
+        print("======")
 
     # Open file for processing
     #dxyfile = pyfits.open('qbu16424j_dxy.fits','readonly')         # Model _DXY file
     dxyfile = pyfits.open(dgeofile,'readonly')         # Model _DXY file
     detector = dxyfile[0].header['detector']
-    print 'DETECTOR', detector
-    print
+    print('DETECTOR', detector)
+    print('')
 
     # Read in filter name from DGEOFILE directly, if not specified by user
     filter1 = None
@@ -65,11 +65,11 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
         else:
             # Error case, filter name not provided in file or by user 
             dxyfile.close()
-            print 'ERROR: Filter name not found in DGEOFILE! Please specify...'
+            print('ERROR: Filter name not found in DGEOFILE! Please specify...')
             raise InputError
         
     filter = string.upper(filter)     # On input, case can be upper or lower   
-    print 'Filter', filter    
+    print('Filter', filter)   
             
     # Get the shape of each chip from the first DGEOFILE array
     dxy_shape = dxyfile[1].data.shape
@@ -79,8 +79,8 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
     # create the grid in such a way that it contains the idices of the 
     # first and last element of the full size array (0-4096) inclusive
     grid=[dxy_shape[1],dxy_shape[0],stepsize,stepsize] 
-    xpts = np.array(range(0,grid[0]+1,grid[2]),np.float32)
-    ypts = np.array(range(0,grid[1]+1,grid[3]),np.float32)
+    xpts = np.array(list(range(0,grid[0]+1,grid[2])),np.float32)
+    ypts = np.array(list(range(0,grid[1]+1,grid[3])),np.float32)
     xygrid = np.meshgrid(xpts,ypts)
     # this padding is necessary so that the end points in the small npol file
     # match the end point of the large dgeo file. 
@@ -99,7 +99,7 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
     for chip in range(1,numchips+1):
         # Process DX and DY for each chip
         for xy in ['DX','DY']:
-            print 'Processing chip from extension: ',xy,',',chip
+            print('Processing chip from extension: ',xy,',',chip)
             onaxis1 = dxyfile[xy,chip].header['NAXIS1']
             onaxis2 = dxyfile[xy,chip].header['NAXIS2']
             if 'CCDCHIP' not in dxyfile[xy,chip].header:
@@ -141,7 +141,7 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
             filter2 = filter
             filter1 = 'CLEAR1L'    
 
-    print filter1, filter2
+    print(filter1, filter2)
     
     # Update keywords
     #newname = detector.lower()+'_'+str(stepsize)+'_' + string.lower(filter) + '_npl.fits'
@@ -161,16 +161,16 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
     dxyfile.close()
     
     # finish by cleaning up output image header by removing unnecessary keywords
-    print 'Cleaning up header'
+    print('Cleaning up header')
     fixheader(filter,newname, odgeofile)
-    print 'Finished creating new file: ',newname
+    print('Finished creating new file: ',newname)
 
 def resample_chip(chip,mesh,corrxy=None,chipname=None):
     """ Apply resampling operations to a single chip's array.
     If provided, also remove column/row correction from array prior to resampling. 
     """
     if corrxy is not None:
-        print 'Removing column correction ',corrxy.shape,' from full chip dxy array...'
+        print('Removing column correction ',corrxy.shape,' from full chip dxy array...')
         chip -= corrxy
     if chipname is not None:
         if os.path.exists(chipname): os.remove(chipname)
@@ -186,7 +186,7 @@ def fixheader(filter,filename, oldname):
     dxyfile.info()
     h0 = dxyfile[0].header
     # remove extraneous keywords from original DGEOFILE
-    for h0key in h0.keys()[15:]:
+    for h0key in list(h0.keys())[15:]:
         if h0key not in required_keys: del h0[h0key]
     del h0['']
     #cards = h0.ascardlist()

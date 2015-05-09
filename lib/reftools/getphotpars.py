@@ -271,7 +271,7 @@ class GetPhotPars(object):
 
     row_struct['obsmode'] = row['obsmode'][0]
     row_struct['datacol'] = row['datacol'][0]
-    row_struct['parnames'] = [row['par%inames' % (i)][0] for i in xrange(1,npars+1)]
+    row_struct['parnames'] = [row['par%inames' % (i)][0] for i in range(1,npars+1)]
     row_struct['parnum'] = npars
     if npars == 0:
       row_struct['results'] = row[row['datacol'][0]]
@@ -279,9 +279,9 @@ class GetPhotPars(object):
     else:
       row_struct['results'] = row[row['datacol'][0]][0].tolist()
       row_struct['telem'] = len(row_struct['results'])
-    row_struct['nelem'] = [row['nelem%i' % (i)][0] for i in xrange(1,npars+1)]
+    row_struct['nelem'] = [row['nelem%i' % (i)][0] for i in range(1,npars+1)]
     row_struct['parvals'] = [row['par%ivalues' % (i)][0].tolist()
-                            for i in xrange(1,npars+1)]
+                            for i in range(1,npars+1)]
 
     return row_struct
 
@@ -310,7 +310,7 @@ class GetPhotPars(object):
     par_struct = {}
 
     par_struct['npar'] = npars
-    par_struct['parnames'] = par_dict.keys()
+    par_struct['parnames'] = list(par_dict.keys())
 
     par_struct['parvals'] = []
     for k in par_struct['parnames']:

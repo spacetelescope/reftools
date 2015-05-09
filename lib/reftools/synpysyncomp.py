@@ -2,7 +2,7 @@
 Tools for comparing pysynphot and synphot photometry calculations.
 
 """
-
+from __future__ import print_function 
 import os
 import csv
 import tempfile
@@ -26,7 +26,7 @@ __vdate__ = '25-Jul-2011'
 
 
 # general error class for this module
-class SynPysynCompError(StandardError):
+class SynPysynCompError(Exception):
   pass
   
 
@@ -74,7 +74,7 @@ class SynPysynComp(object):
         self.obsmodes.append(row['obsmode'].lower())
       else:
         mode = row['obsmode'].lower()
-        for i in xrange(row['nelem1']):
+        for i in range(row['nelem1']):
           temp_mode1 = mode.replace(row['par1names'].lower(),
                         row['par1names'].lower() + str(row['par1values'][i]))
           
@@ -85,7 +85,7 @@ class SynPysynComp(object):
             self.obsmodes.append(temp_mode1)
             continue
             
-          for j in xrange(row['nelem2']):
+          for j in range(row['nelem2']):
             temp_mode2 = temp_mode1.replace(row['par2names'].lower(),
                           row['par2names'].lower() + str(row['par2values'][j]))
             self.obsmodes.append(temp_mode2)
@@ -210,7 +210,7 @@ class SynPysynComp(object):
     
     comp = {'obsmode': mode}
     
-    for k in pysyn.iterkeys():
+    for k in pysyn.keys():
       comp['py' + k] = pysyn[k]
       comp['ir' + k] = irsyn[k]
       comp[k + '%'] = (pysyn[k] - irsyn[k])/irsyn[k]
@@ -241,7 +241,7 @@ class SynPysynComp(object):
       
     comp = self.comp_synpysyn(self.obsmodes[0])
     
-    for k in comp.iterkeys():
+    for k in comp.keys():
       res[k] = [comp[k]]
     
     # now fill result
@@ -251,7 +251,7 @@ class SynPysynComp(object):
       
       comp = self.comp_synpysyn(mode)
       
-      for k in comp.iterkeys():
+      for k in comp.keys():
         res[k].append(comp[k])
         
     return res
@@ -287,7 +287,7 @@ class SynPysynComp(object):
                           
     for mode in self.obsmodes:
       if verbose:
-        print 'Processing mode ' + mode
+        print('Processing mode ' + mode)
       
       comp = self.comp_synpysyn(mode)
       wcsv.writerow(comp)
@@ -373,7 +373,7 @@ class SynPysynPlot(object):
       ax.get_yaxis().set_major_locator(MaxNLocator(integer=True))
       
   def _add_data(self):
-    for i in xrange(len(self.datalist)):
+    for i in range(len(self.datalist)):
       self.axlist[i].hist(self.datalist[i],bins=20)
       
   def save_plot(self,outname='synpysyn_comp.pdf'):

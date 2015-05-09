@@ -8,6 +8,7 @@ from __future__ import print_function, division
 
 # STDLIB
 import os
+import sys
 from collections import defaultdict
 
 # ASTROPY
@@ -151,7 +152,11 @@ class Node(object):
         self.edgeset = set()
 
     def __iter__(self):
-        return self.edges.values().__iter__()
+        if sys.version_info[0] < 3:
+            iterator = self.edges.values().__iter__()
+        else:
+            iterator = self.edges.values()
+        return iterator
 
     def __str__(self):
         return str(self.name)
@@ -380,7 +385,7 @@ class Graph(object):
             self.obsrules_key = obsmode + ',*'
         else:
             raise ObsmodeError('Unsupported obsmode string: ' +
-                               unicode(obsmode))
+                                str(obsmode))
 
         self.obsrules_junk = rules_dict['default']['junk'] + \
                              rules_dict[self.obsrules_key]['junk']
@@ -391,7 +396,7 @@ class Graph(object):
         for o in obsmode.split(','):
             if o in self.obsrules_excl:
                 raise ObsmodeError('Entered obsmode includes excluded '
-                                   'parameters: ' + unicode(obsmode))
+                                    'parameters: ' + str(obsmode))
 
         instrmode = None
 
@@ -468,7 +473,7 @@ class Graph(object):
         # try to eval the data
         try :
             datadict = eval(datastr)
-        except Exception, e:
+        except Exception as e:
             log.error('{0}\ncannot eval data in file {1}'.format(str(e), fname))
             raise
 

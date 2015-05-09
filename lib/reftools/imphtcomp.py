@@ -2,7 +2,7 @@
 Tools for comparing  two IMPHTTAB tables from the same instrument and detector.
 
 """
-
+from __future__ import print_function
 import os
 
 import numpy as np
@@ -20,7 +20,7 @@ __version__ = '1.0.2'
 __vdate__ = '25-Jul-2011'
 
 # general error class for this module
-class ImphtcompError(StandardError):
+class ImphtcompError(Exception):
   pass
 
 
@@ -277,8 +277,8 @@ class ImphttabComp(object):
           
         # expand the obsmodes with parameterized variable values and save
         # the result for each expanded obsmode  
-        for j in xrange(flam1.nelem2[i]):
-          for k in xrange(flam1.nelem1[i]):          
+        for j in range(flam1.nelem2[i]):
+          for k in range(flam1.nelem1[i]):          
             temp_mode = mode.replace(flam1.par1names[i].lower(),
                                      flam1.par1names[i].lower() + str(flam1.par1values[k]))
             temp_mode = temp_mode.replace(flam1.par2names[i].lower(),

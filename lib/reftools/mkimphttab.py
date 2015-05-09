@@ -139,7 +139,7 @@ def expand_obsmodes(basemode, pardict):
     # Build up list of OBSMODE covering all combinations of parameterized
     # variable values
     elif len(pardict) == 1:
-        key = pardict.keys()[0]
+        key = list(pardict.keys())[0]
         for val in pardict[key]:
             ostr = basemode.replace(key.lower(), key.lower() + str(val))
             olist.append(ostr)
@@ -147,10 +147,10 @@ def expand_obsmodes(basemode, pardict):
     else:
         nkeys = len(pardict)
         for nkey in range(nkeys - 1):
-            key = pardict.keys()[nkey]
+            key = list(pardict.keys())[nkey]
             for val in pardict[key]:
                 pdict = {}
-                for k in pardict.keys()[nkey+1:]:
+                for k in list(pardict.keys())[nkey+1:]:
                     pdict[k] = pardict[k]
                 ostr = basemode.replace(key.lower(), key.lower()+str(val))
                 olist.extend(expand_obsmodes(ostr, pdict))
@@ -439,7 +439,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     parnames_rows = np.chararray([nrows,max_npars], itemsize=fpars_sz) # create columns for PAR*NAMES
     parnames_rows[:] = ''*fpars_sz # initialize with blanks, just to be safe
 
-    for nr in xrange(nrows):
+    for nr in range(nrows):
         # create path through graphtab for this obsmode, reading in values for
         # all parameterized variables as well
         obspath = x.traverse(obsmodes[nr], verbose=False)
@@ -447,7 +447,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
 
         # Create a master set of parameterized variables and their ranges of values
         for p in filtdata:
-            if (p.upper(),obsmodes[nr]) not in filtdata_set.keys():
+            if (p.upper(),obsmodes[nr]) not in list(filtdata_set.keys()):
                 filtdata_set[(p.upper(),obsmodes[nr])] = filtdata[p]
 
         fpars = fpars_vals[nr]
@@ -496,7 +496,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         log.info('Computing photmetry values for each row\'s obsmode...')
         sys.stdout.flush()
 
-    for nr in xrange(nrows):
+    for nr in range(nrows):
         if verbose:
             log.info('Row: {0}'.format(nr + 1))  # Provide some indication of which row is being worked
             sys.stdout.flush()
