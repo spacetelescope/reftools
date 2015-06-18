@@ -1,7 +1,6 @@
 from __future__ import division, print_function # confidence high
 
 import pyfits
-import string
 import os
 
 from stsci.tools import fileutil,parseinput
@@ -68,7 +67,7 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
             print('ERROR: Filter name not found in DGEOFILE! Please specify...')
             raise InputError
         
-    filter = string.upper(filter)     # On input, case can be upper or lower   
+    filter = filter.upper()     # On input, case can be upper or lower   
     print('Filter', filter)   
             
     # Get the shape of each chip from the first DGEOFILE array
@@ -144,7 +143,7 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
     print(filter1, filter2)
     
     # Update keywords
-    #newname = detector.lower()+'_'+str(stepsize)+'_' + string.lower(filter) + '_npl.fits'
+    #newname = detector.lower()+'_'+str(stepsize)+'_' + filter.lower() + '_npl.fits'
     newname = dgeoroot[:dgeoroot.find('_dxy.fits')] + '_npl.fits'
     if os.path.exists(newname): os.remove(newname)
     dxyfile[0].header['filename'] = newname
