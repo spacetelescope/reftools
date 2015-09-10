@@ -1,6 +1,8 @@
 Make PCTETAB Reference File
 ===========================
 
+.. currentmodule:: reftools.pctetab
+
 The PCTETAB reference file contains data in both its primary header
 and in several table extensions. The parameters that go into the primary header
 are single numbers that must be specified in the call to `MakePCTETab`.
@@ -24,10 +26,6 @@ Primary Header Parameters
 
 Table Extensions
 ----------------
-
-
-
-.. currentmodule:: reftools.pctetab
 
 .. automodule:: reftools.pctetab
    :members:
