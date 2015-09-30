@@ -15,10 +15,12 @@ ext = [distutils.core.Extension(
 setupargs = {
     'version': '1.7.0',
     'description': "Reference File Python Tools",
-    'author': "Warren Hack, Nadezhda Dencheva, Vicki Laidler, Matt Davis, Megan Sosey, Pey Lian Lim",
+    'author': ("Warren Hack, Nadezhda Dencheva, Vicki Laidler, Matt Davis, "
+               "Megan Sosey, Pey Lian Lim, Mihai Cara"),
     'author_email': "help@stsci.edu",
     'license': "http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE",
-    'data_files': [("reftools/pars", ['lib/reftools/pars/*']),
+    'data_files': [("reftools/data", ['lib/reftools/data/*']),
+                   ("reftools/pars", ['lib/reftools/pars/*']),
                    ('reftools', ['lib/reftools/*.help']),
                    ('reftools', ['LICENSE.txt'])],
     'scripts': ['lib/reftools/tdspysyn'],
