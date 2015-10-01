@@ -19,7 +19,7 @@ Contents:
    synpysyncomp
    getphotpars
    pctetab
-   parsedq
+   interpretdq
 
 Indices and tables
 ==================
