@@ -1,6 +1,6 @@
 from __future__ import division, print_function # confidence high
 
-import pyfits
+from astropy.io import fits as pyfits
 import os
 
 from stsci.tools import fileutil,parseinput

@@ -34,7 +34,7 @@ import math
 import os
 import sys
 import numpy as np
-import pyfits
+from astropy.io import fits as pyfits
 from stsci.tools import parseinput, teal
 from calcos import ccos
 
