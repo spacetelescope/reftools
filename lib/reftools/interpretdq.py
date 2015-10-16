@@ -178,10 +178,6 @@ class DQParser(object):
         self._valid_flags = self.tab[self._dqcol]
         self._total_flags = int(self._valid_flags.sum())
 
-        # For caching results
-        self._data = None
-        self._dqs_by_flag = None
-
     @classmethod
     def from_instrument(cls, instrument):
         """Use pre-defined DQ flags for the given instrument
@@ -218,11 +214,6 @@ class DQParser(object):
 
         return cls(get_pkg_data_filename(fname))
 
-    def _one_flag(self, vf):
-        """Process one DQ flag for all input values at once.
-        Used with :py:func:`map`."""
-        self._dqs_by_flag[vf] = np.where((self._data & vf) != 0)
-
     def interpret_array(self, data, verbose=True):
         """Interpret DQ values for an array.
 
@@ -246,32 +237,32 @@ class DQParser(object):
             of affected array elements.
 
         """
-        self._data = np.asarray(data, dtype=np.int)  # Ensure int array
-        self._dqs_by_flag = {}
-
         if verbose:
             print('Parsing DQ flag(s)...')
             t_beg = time.time()
 
+        data = np.asarray(data, dtype=np.int)  # Ensure int array
+        dqs_by_flag = {}
+
+        def _one_flag(vf):
+            dqs_by_flag[vf] = np.where((data & vf) != 0)
+
         # Skip good flag
-        list(map(self._one_flag, self._valid_flags[1:]))
+        list(map(_one_flag, self._valid_flags[1:]))
 
         if verbose:
             t_end = time.time()
-            nbad = np.sum(self._data != self._okflag)
-            ntot = self._data.size
-            pbad = nbad * 100.0 / ntot
+            nbad = np.sum(data != self._okflag)
+            ntot = data.size
+            pbad = 100.0 * nbad / ntot
             print('Done!\nRun time: {0:.3f} s\nN_FLAGGED: {1}/{2} '
                   '({3:.3f}%)'.format(t_end - t_beg, nbad, ntot, pbad))
-            for key in sorted(self._dqs_by_flag):
-                nbad = len(self._dqs_by_flag[key][0])
-                pbad = nbad * 100.0 / ntot
+            for key in sorted(dqs_by_flag):
+                nbad = len(dqs_by_flag[key][0])
+                pbad = 100.0 * nbad / ntot
                 print('FLAG={0:<5d}: {1} ({2:.3f}%)'.format(key, nbad, pbad))
 
-        # Garbage collect
-        self._data = None
-
-        return self._dqs_by_flag
+        return dqs_by_flag
 
     def interpret_dqval(self, dqval):
         """Interpret DQ values for a single pixel.

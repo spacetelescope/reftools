@@ -3,7 +3,7 @@ from __future__ import division, print_function # confidence high
 import sys,os
 import numpy as np
 
-import pyfits
+from astropy.io import fits as pyfits
 import pylab as pl
 import stsci.imagestats as imagestats
 from stsci.tools import fileutil

@@ -7,7 +7,7 @@ import sys
 import warnings
 
 import numpy as np
-import pyfits
+from astropy.io import fits as pyfits
 import stsci.numdisplay as numdisplay
 from stsci.tools import fileutil
 from pywcs import WCS, DistortionLookupTable

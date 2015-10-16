@@ -14,7 +14,7 @@ from matplotlib.figure import SubplotParams
 from matplotlib.ticker import MaxNLocator
 from matplotlib.ticker import FormatStrFormatter
 
-import pyfits
+from astropy.io import fits as pyfits
 
 import pysynphot as S
 
