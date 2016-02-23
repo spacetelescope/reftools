@@ -13,7 +13,7 @@ ext = [distutils.core.Extension(
         include_dirs=[pythoninc])]
 
 setupargs = {
-    'version': '1.7.0',
+    'version': '1.7.1',
     'description': "Reference File Python Tools",
     'author': ("Warren Hack, Nadezhda Dencheva, Vicki Laidler, Matt Davis, "
                "Megan Sosey, Pey Lian Lim, Mihai Cara"),
