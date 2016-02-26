@@ -6,7 +6,9 @@ from __future__ import division, print_function # confidence high
 import os
 import numpy as np
 from astropy.io import fits as pyfits
-import stsci.ndimage as ndimage
+from scipy import ndimage
+
+
 # replaced calls to wu.readcols() with:
 # x,y = np.loadtxt(fname,usecols=(0,1),unpack=True)
 # More examples of I/O with numpy can be found at:
