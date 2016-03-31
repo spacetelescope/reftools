@@ -1,4 +1,5 @@
-RECON-INFO
+RELIC-INFO
+relic/
 lib/*/version.py
 build/
 dist/
