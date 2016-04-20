@@ -114,7 +114,7 @@ html_theme = 'sphinx_rtd_theme'
 #html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ['_static/css/']
+#html_theme_path = ['_static/css/']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -139,14 +139,14 @@ html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-html_last_updated_fmt = '%b %d, %Y'
+#html_last_updated_fmt = '%b %d, %Y'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {'**':['globaltoc.html','relations.html','searchbox.html']}
+#html_sidebars = {'**':['globaltoc.html','relations.html','searchbox.html']}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
