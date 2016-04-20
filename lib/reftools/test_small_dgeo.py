@@ -8,10 +8,17 @@ import warnings
 
 import numpy as np
 from astropy.io import fits as pyfits
-import stsci.numdisplay as numdisplay
-from stsci.tools import fileutil
-from pywcs import WCS, DistortionLookupTable
+try:
+    from stsci.tools import fileutil
+except ImportError:  # So RTD would build
+    pass
+from astropy.wcs import WCS, DistortionLookupTable
 from stwcs import wcsutil, updatewcs
+
+try:
+    import stsci.numdisplay as numdisplay
+except ImportError:  # So RTD would build
+    pass
 
 from . import wtraxyutils
 
@@ -232,7 +239,7 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
                 raw_input("Press 'ENTER' to close figure and show next chip...")
             else:
                 input("Press 'ENTER' to close figure and show next chip...")
-                
+
             pl.close()
 
         if output:

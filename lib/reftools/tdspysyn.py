@@ -35,7 +35,12 @@ import os
 import sys
 import numpy as np
 from astropy.io import fits as pyfits
-from stsci.tools import parseinput, teal
+
+try:
+    from stsci.tools import parseinput, teal
+except ImportError:  # So RTD would build
+    pass
+
 from calcos import ccos
 
 DAYS_PER_YEAR = 365.25
@@ -208,7 +213,7 @@ def initTds (input, outroot, min_wl, max_wl, dwl, thru_mjd, last_mjd, row):
         nrows = len (ifd[1].data)
         if row < 0 or row >= nrows:
             ifd.close()
-            raise RuntimeError("`row` is out of range; " 
+            raise RuntimeError("`row` is out of range; "
                 "there are %d rows in the TDS table" % nrows)
     ifd.close()
     if filetype != "missing" and \
@@ -253,7 +258,7 @@ def expandFilename (filename):
         if count >= MAX_COUNT:
             break
     if not done:
-        raise RuntimeError("%d iterations exceeded while expanding " 
+        raise RuntimeError("%d iterations exceeded while expanding "
                 "variables in file name %s" % (MAX_COUNT, filename))
     fname = os.path.abspath (fname)             # ../file
     fname = os.path.expanduser (fname)          # ~/file
@@ -548,7 +553,7 @@ class ConvertTds (object):
         """
 
         if self.useafter == "missing":
-            raise RuntimeError("Keyword USEAFTER is missing " 
+            raise RuntimeError("Keyword USEAFTER is missing "
                                 "from the primary header.")
 
         # The format is expected to be 'month day year hh:mm:ss',
@@ -556,7 +561,7 @@ class ConvertTds (object):
         words = self.useafter.split()
         len_words = len (words)
         if len_words < 3 or len_words > 6:
-            raise RuntimeError("Can't interpret USEAFTER date '%s'" % 
+            raise RuntimeError("Can't interpret USEAFTER date '%s'" %
                                 self.useafter)
         if words[1].endswith (","):     # allow "May 11, 2009"
             words[1] = words[1][:-1]
@@ -575,7 +580,7 @@ class ConvertTds (object):
             hms = words[3].split (":")
             len_hms = len (hms)
             if len_hms < 1 or len_hms > 3:
-                raise RuntimeError("Can't interpret USEAFTER date '%s'" % 
+                raise RuntimeError("Can't interpret USEAFTER date '%s'" %
                                     self.useafter)
             if len_hms == 1:
                 fraction = float (hms[0]) / 24.
@@ -611,7 +616,7 @@ class CosTds (ConvertTds):
                              thru_mjd, last_mjd, row)
 
         if self.ref_time == "missing":
-            raise RuntimeError("Keyword REF_TIME is missing " 
+            raise RuntimeError("Keyword REF_TIME is missing "
                                 "from the table header.")
 
     def makeFilename (self, row):

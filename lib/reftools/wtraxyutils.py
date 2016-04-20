@@ -4,13 +4,16 @@ import sys,os
 import numpy as np
 
 from astropy.io import fits as pyfits
-import pylab as pl
-import stsci.imagestats as imagestats
-from stsci.tools import fileutil
+try:
+    import pylab as pl
+    import stsci.imagestats as imagestats
+    from stsci.tools import fileutil
+except ImportError:  # So RTD would build
+    pass
 import datetime
 
 
-""" 
+"""
 Code for interpreting ASCII files
 """
 
@@ -23,7 +26,7 @@ def clean_separators(line,sep,niter=10):
 
 
 def write_xycols(infile,outfile,cols=[1,2,4,5],scale=None,center=[2048,1024],wxin=True):
-  
+
     fin = open(infile,'r')
     fout = open(outfile,'a+')
     nlines = 0
@@ -35,14 +38,14 @@ def write_xycols(infile,outfile,cols=[1,2,4,5],scale=None,center=[2048,1024],wxi
             if scale is not None:
                 xo = (xo - center[0])/scale + center[0]
                 yo = (yo - center[1])/scale + center[1]
-                
+
             xi = float(lspl[cols[0]])
             yi = float(lspl[cols[1]])
-        
+
             fout.write(" %10.5f %10.5f    %10.5f %10.5f\n"%(xi,yi,xo,yo))
             #fout.write(" %10.5f %10.5f    %10.5f %10.5f\n"%(float(lspl[cols[0]]),float(lspl[cols[1]]),float(lspl[cols[2]]),float(lspl[cols[3]])))
             nlines += 1
-  
+
     fin.close()
     fout.close()
     print('[wtraxyutils.write_xycols] wrote out ',nlines,' to ',outfile)
@@ -71,8 +74,8 @@ def write_xy_file(outname,xydata,append=False,format="%20.6f"):
             outstr += format%(xydata[col][row])
         fout1.write(outstr+"\n")
     fout1.close()
-    print('wrote XY data to: ',outname)  
- 
+    print('wrote XY data to: ',outname)
+
 def apply_poly(cx,cy,order,pos=[[0.,0.],[0.,1.],[1.,0.],[1.,1.]]):
     ''' Apply a polynomial to a unit box.
     '''
@@ -80,12 +83,12 @@ def apply_poly(cx,cy,order,pos=[[0.,0.],[0.,1.],[1.,0.],[1.,1.]]):
     c = pos * 0.0
     pos[:,0] -= (pos[:,0].max() - pos[:,0].min())/2.
     pos[:,1] -= (pos[:,1].max() - pos[:,1].min())/2.
-    
+
     for i in range(order+1):
         for j in range(i+1):
             c[:,0] = c[:,0] + cx[i][j] * pow(pos[:,0],j) * pow(pos[:,1],(i-j))
             c[:,1] = c[:,1] + cy[i][j] * pow(pos[:,0],j) * pow(pos[:,1],(i-j))
-    
+
     return c
 
 def rot_poly(cx,cy,rot):
@@ -97,11 +100,11 @@ def rot_poly(cx,cy,rot):
     rcy = rcxy[1]
     rcx.shape = cx.shape
     rcy.shape = cy.shape
-    
+
     return rcx,rcy
 
 def apply_tdd_coeffs(x,y,alpha,beta,theta,xoff=None,yoff=None,recenter=False,direct_tdd=True):
-    
+
     if direct_tdd:
         xoff = 2048.0
         yoff = 2048.0
@@ -126,7 +129,7 @@ def apply_tdd_coeffs(x,y,alpha,beta,theta,xoff=None,yoff=None,recenter=False,dir
     return xd,yd
 def apply_dq_values(infile,outfile,dqcol=3,cols=[0,1],dqlimit=-10.0,corr=[0.,0.]):
     ''' raw xy -> cleaned xy[dqlimit]
-    
+
         Apply a dq mask based on what data was retained
         during TDD correction by Vera, where dq > 0.
     '''
@@ -139,8 +142,8 @@ def apply_dq_values(infile,outfile,dqcol=3,cols=[0,1],dqlimit=-10.0,corr=[0.,0.]
             fout.write(" %10.5f %10.5f \n"%(float(lspl[cols[0]])+corr[0],float(lspl[cols[1]])+corr[1]))
     fin.close()
     fout.close()
-        
-    
+
+
 def readcols(infile,cols=[0,1,2,3]):
 
     fin = open(infile,'r')
@@ -162,8 +165,8 @@ def readcols(infile,cols=[0,1,2,3]):
     fin.close()
     for n in range(len(cols)):
         outarr[n] = np.array(outarr[n],np.float64)
-    return outarr            
-   
+    return outarr
+
 def parse_phot_line(line):
     """ Converts line with photometry into a list of values without blanks
     """
@@ -177,13 +180,13 @@ def parse_phot_line(line):
 def read_phot(photfile,aperture=None,col=1):
     """ Read in the photometry results as recorded in a photometry file written
     out by daophot.phot.  If None, it will pick the first non-1 aperture listed
-    for each star. 
-    """            
+    for each star.
+    """
     if os.path.exists(photfile):
         pfile = open(photfile,'r')
         photlines = pfile.readlines()
         pfile.close()
-        
+
         out = []
         filename = None
         indx = 0
@@ -200,10 +203,10 @@ def read_phot(photfile,aperture=None,col=1):
             if indx == 0:
                 if lspl[-2] in ['NoError','BigShift']: err = 1
                 else: err = 0
-                
+
                 coords = [float(lspl[0]),float(lspl[1]),err]
             # skip the next 2 lines
-            if indx < 3: 
+            if indx < 3:
                 indx += 1
                 continue
             # Ignore radius 1 photometry
@@ -213,7 +216,7 @@ def read_phot(photfile,aperture=None,col=1):
             if aperture is not None:
                 if float(lspl[0]) != aperture:
                     continue
-                else:                    
+                else:
                     coords.append(float(lspl[col]))
                     out.append(coords)
             else:
@@ -225,18 +228,18 @@ def read_phot(photfile,aperture=None,col=1):
 
 def get_db_fit(dbfile,fit=None):
     """ Get the matrix solution found by geomap as stored in a database file.
-        The 'fit' parameter(1-based, not zero based) specifies which fit from 
+        The 'fit' parameter(1-based, not zero based) specifies which fit from
         a file to read, with the default being the last one.
     """
     if os.path.exists(dbfile):
         db = open(dbfile,'r')
         dblines = db.readlines()
         db.close()
-        
+
         # Record the location of all fits in db file
         fitnum = []
         for line,nline in zip(dblines,list(range(len(dblines)))):
-            if line.find('begin') > -1: 
+            if line.find('begin') > -1:
                 fitnum.append(nline)
         fitnum.append(len(dblines)+1)
 
@@ -252,7 +255,7 @@ def get_db_fit(dbfile,fit=None):
             vals = clean_separators(line.strip(),'\t').split('\t')
             out.append(float(vals[0]))
             out.append(float(vals[-1]))
-        
+
     return out[0],out[1],np.array([[out[2],out[3]],[out[4],out[5]]])
 
 def apply_db_fit(data,fit,xsh=0.0,ysh=0.0):
@@ -261,14 +264,14 @@ def apply_db_fit(data,fit,xsh=0.0,ysh=0.0):
     numpts = xy1x.shape[0]
     if fit is not None:
         xy1 = np.zeros((xy1x.shape[0],2),np.float64)
-        xy1[:,0] = xy1x 
-        xy1[:,1] = xy1y 
+        xy1[:,0] = xy1x
+        xy1[:,1] = xy1y
         xy1 = np.dot(xy1,fit)
         xy1x = xy1[:,0] + xsh
         xy1y = xy1[:,1] + ysh
     return xy1x,xy1y
 
-    
+
 def read_center_file(infile):
     x = []
     y = []
@@ -293,7 +296,7 @@ def transform_dgeo_for_sip(fltimage,update=True):
         WDRIZZLE in SIP mode. This is only intended to be used for testing the
         validity of this form of the DGEOFILE for use with SIP headers.
     """
-    
+
     flt_phdr = pyfits.getheader(fltimage)
     # Start by parsing the input filename and creating the output name
     if 'ODGEOFIL' in flt_phdr:
@@ -301,7 +304,7 @@ def transform_dgeo_for_sip(fltimage,update=True):
     else:
         dxyfname = fileutil.osfn(flt_phdr['DGEOFILE'])
     print('Starting with original DGEOFILE of: ',dxyfname)
-    
+
     dxypath,dxyname = os.path.split(dxyfname)
     dxyoutname = dxyname.replace('_dxy.fits','_sipdxy.fits')
     if dxyfname.find('sipdxy.fits') > -1:
@@ -323,13 +326,13 @@ def transform_dgeo_for_sip(fltimage,update=True):
     ##-WCSLIN X/YC,X/YS: [ .9844883922, .9716717277, .0426647491,-.0453650945]
     #These values can be derived using:
     # np.dot(np.linalg.inv(R.cd),cd)
-    # where R.cd is the reference chip CD matrix without distortion 
+    # where R.cd is the reference chip CD matrix without distortion
     #               as computed in makewcs
     # and cd is the final CD matrix for each chip.
     # These values are not even used anymore, but they provide documentation of
     # the typical values for an ACS/WFC image
     #if cdmat is None:
-    #    cdmat = {1:np.array([[.9966187132,.0392596721],[.0298351033,1.0055060926]]), 
+    #    cdmat = {1:np.array([[.9966187132,.0392596721],[.0298351033,1.0055060926]]),
     #         2:np.array([[.9844883922,.0453650945],[.0426647491,.9716717277]])
     #        }
 
@@ -347,20 +350,20 @@ def transform_dgeo_for_sip(fltimage,update=True):
         cdx,cdy = np.dot(cdmat_inv,[dx.ravel(),dy.ravel()])
         cdx.shape = dx.shape
         cdy.shape = dy.shape
-        
+
         print('Transforming chip #',chip)
         # Copy in the new values to the FITS structure
         dxyin['dx',chip].data = cdx
         dxyin['dy',chip].data = cdy
-        
+
     if os.path.exists(dxyoutname): os.remove(dxyoutname)
     print('Writing out transformed DGEOFILE as: ',dxyoutname)
     dxyin.writeto(dxyoutname)
-    
-    # if specified by user, update input image with new DGEOFILE 
+
+    # if specified by user, update input image with new DGEOFILE
     if update:
         flt = pyfits.open(fltimage,mode='update')
-        # store original DGEOFILE in a new keyword 
+        # store original DGEOFILE in a new keyword
         if ('ODGEOFIL' in flt[0].header and flt[0].header['ODGEOFIL'] in ['N/A',""]) or 'ODGEOFIL' not in flt[0].header:
             flt[0].header.update('ODGEOFIL',flt[0].header['DGEOFILE'])
             flt[0].header['DGEOFILE'] = dxyoutname
@@ -368,17 +371,17 @@ def transform_dgeo_for_sip(fltimage,update=True):
         flt.close()
         print('Input file ',fltimage,' updated with new DGEOFILE.')
         print('==> Old DGEOFILE archived in ODGEOFIL keyword')
-        
+
 def compare_matched_pos(matchfile,img1,img2, width=10,grid=[4,3],cmap=pl.gray):
     ''' Display image slices from each image around each object for visual
-        verification of matches. 
+        verification of matches.
     '''
     # Read in arrays for each image
     arr1 = pyfits.getdata(img1,0)
     arr2 = pyfits.getdata(img2,0)
     # Read in match file
     x1,y1,x2,y2 = readcols(matchfile,cols=[0,1,2,3])
-                
+
     # Initialize colormap
     cmap()
     nplots = grid[0]*2*grid[1]
@@ -393,7 +396,7 @@ def compare_matched_pos(matchfile,img1,img2, width=10,grid=[4,3],cmap=pl.gray):
         cenx2 = int(x2[i]+0.5)
         ceny2 = int(y2[i]+0.5)
         slice2 = arr2[ceny2-width:ceny2+width,cenx2-width:cenx2+width]
-        
+
         # Display pairs of slices as sub-plots
         if indx == 0:
             pl.clf()
@@ -418,7 +421,7 @@ def find_min_match_cols(matchroot,xcen,ycen,matchextn=['match','db'],fit=None,
     ''' Select out those rows from the match file which fall within a
         specified limit after applying the fit in the geomap database file.
         The coordinates are also shifted back into the image frame by applying
-        the CRPIX1,CRPIX2 of the output frame (given as xcen,ycen). 
+        the CRPIX1,CRPIX2 of the output frame (given as xcen,ycen).
     '''
     match = matchroot+'.'+matchextn[0]
     dbfile = matchroot+'.'+matchextn[1]
@@ -429,7 +432,7 @@ def find_min_match_cols(matchroot,xcen,ycen,matchextn=['match','db'],fit=None,
     xycols = readcols(match,cols=cols1+cols2)
     # Read in fit from 'geomap' ".db" file
     xsh,ysh,drot = get_db_fit(dbfile,fit=fit)
-    
+
     # Compute residuals after applying fit
     xy1xf,xy1yf = apply_db_fit(xycols,drot,xsh=xsh,ysh=ysh)
     dx = xycols[2] - xy1xf
@@ -444,12 +447,12 @@ def find_min_match_cols(matchroot,xcen,ycen,matchextn=['match','db'],fit=None,
         return
     else:
         print('Found ',len(gr),' matches with limit of ',limit,' for ',match)
-    
+
     # generate output name and write out values found with resid <= limit
     outname = matchroot+'_limit'+str(limit).replace('.','')+'.coo'
     write_xy_file(outname,[xycols[0][gr]+xcen,xycols[1][gr]+ycen,xycols[2][gr]+xcen,xycols[3][gr]+ycen])
-    
-    
+
+
 def match_cols(xin,yin,xref,yref,outfile,threshold=1.0):
     f = open(outfile,'a+')
     for x,y in zip(xin,yin):
@@ -459,10 +462,10 @@ def match_cols(xin,yin,xref,yref,outfile,threshold=1.0):
                 f.write("%0.6f  %0.6f  %0.6f  %0.6f\n"%(x,y,xr,yr))
                 break
     f.close()
-    
+
 
 def ordered_match_cols(file1,file2,output,matchcol1=[3,4],matchcol2=[3,4],cols1=[0,1],cols2=[0,1]):
-    ''' Extract xy positions from file 1 and file2 where the xy positions from matchcol1 in file1 
+    ''' Extract xy positions from file 1 and file2 where the xy positions from matchcol1 in file1
         is the same as the xy positions from matchcol2 in file2.
     '''
     xcol1,ycol1,mxcol1,mycol1 = readcols(file1,cols=cols1+matchcol1)
@@ -474,40 +477,40 @@ def ordered_match_cols(file1,file2,output,matchcol1=[3,4],matchcol2=[3,4],cols1=
     c2indx = []
     for c1 in range(len1):
         for c2 in range(len2):
-            if ((mxcol1[c1] == mxcol2[c2]) and (mycol1[c1] == mycol2[c2])): 
+            if ((mxcol1[c1] == mxcol2[c2]) and (mycol1[c1] == mycol2[c2])):
                 c1indx.append(c1)
                 c2indx.append(c2)
                 break
     write_xy_file(output,[xcol1[c1indx],ycol1[c1indx],xcol2[c2indx],ycol2[c2indx]])
-    
-            
+
+
 def decimal_date(dateobs,timeobs=None):
     """ Convert DATE-OBS (and optional TIME-OBS) into a decimal year.
-    """    
+    """
     year,month,day = dateobs.split('-')
-    if timeobs is not None: 
+    if timeobs is not None:
         hr,min,sec = timeobs.split(':')
     else:
         hr,min,sec = 0,0,0
     rdate = datetime.datetime(int(year),int(month),int(day),int(hr),int(min),int(sec))
     dday = (float(rdate.strftime("%j")) + rdate.hour/24.0 + rdate.minute/(60.*24) + rdate.second/(3600*24.))/365.25
     ddate = int(year) + dday
-    
+
     return ddate
 
 def plot_fltndrz_linkfile(rootname,fltdrzcols=[8,9],drzcols=[0,1],limit=1.0,vector=False,scale=5,title=None):
     # Name of file generated by Jay's program fltNdrz.e which contains
     # the positions derived from the FLT image, DRZ image, and transformed FLT positions
     fltdrzname = 'LOG.'+rootname+'.link'
-    
+
     #rawx,rawy = readcols(fltdrzname,cols=[4,5])
     drzx,drzy = readcols(fltdrzname,cols=fltdrzcols)
     drzimgx,drzimgy = readcols(fltdrzname,cols=drzcols)
     xy_wxy_file = rootname+'_xyall_vs_wxy.coo'
-    
+
     make_vector_plot(xy_wxy_file,data=[drzx,drzy,drzimgx,drzimgy],limit=limit,vector=vector,scale=scale,title=title)
-    
-    
+
+
 def make_vector_plot(coordfile,columns=[0,1,2,3],data=None,title=None, axes=None, every=1,
                     limit=None, xlower=None, ylower=None, output=None, headl=4,headw=3,
                     xsh=0.0,ysh=0.0,fit=None,vector=True,scale=5,append=False,linfit=False,rms=True):
@@ -543,13 +546,13 @@ def make_vector_plot(coordfile,columns=[0,1,2,3],data=None,title=None, axes=None
         xy1x = xy1x[xindx].copy()
         xy1y = xy1y[xindx].copy()
     print('# of points after clipping: ',len(dx))
-    
+
     if output is not None:
         write_xy_file(output,[xy1x,xy1y,dx,dy])
-        
+
     if not append:
         pl.clf()
-    if vector: 
+    if vector:
         dxs = imagestats.ImageStats(dx.astype(np.float32))
         dys = imagestats.ImageStats(dy.astype(np.float32))
         minx = xy1x.min()
@@ -575,7 +578,7 @@ def make_vector_plot(coordfile,columns=[0,1,2,3],data=None,title=None, axes=None
             maxx = xy1x.max()
             miny = dx.min()
             maxy = dx.max()
-            
+
             if xy1y.min() < minx: minx = xy1y.min()
             if xy1y.max() > maxx: maxx = xy1y.max()
             if dy.min() < miny: miny = dy.min()
@@ -586,8 +589,8 @@ def make_vector_plot(coordfile,columns=[0,1,2,3],data=None,title=None, axes=None
             miny = axes[1][0]
             maxy = axes[1][1]
         xrange = maxx - minx
-        yrange = maxy - miny 
-        
+        yrange = maxy - miny
+
         for pnum,plot in zip(list(range(1,5)),plot_defs):
             ax = pl.subplot(2,2,pnum)
             ax.plot(plot[0],plot[1],'.')
@@ -611,4 +614,4 @@ def make_vector_plot(coordfile,columns=[0,1,2,3],data=None,title=None, axes=None
                 yr = [m*lx[0]+c,lx[-1]*m+c]
                 pl.plot([lx[0],lx[-1]],yr,'r')
                 pl.text(lx[0]+lxr,plot[1].max()+lyr,"%0.5g*x + %0.5g [%0.5g,%0.5g]"%(m,c,yr[0],yr[1]),color='r')
-        
+

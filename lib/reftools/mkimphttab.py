@@ -16,8 +16,11 @@ from astropy import log
 from astropy.io import fits
 
 # STSCI
-import pysynphot as S
-from pysynphot import refs
+try:
+    import pysynphot as S
+    from pysynphot import refs
+except ImportError:  # So RTD would build
+    pass
 
 # LOCAL
 from . import graphfile as sgf
@@ -222,7 +225,7 @@ def parse_filters(filters):
 def get_date():
     """Returns a formatted string with the current date and time.
 
-    .. note:: Copied from :func:`stsci.tools.fileutil.get_date`.
+    .. note:: Copied from ``stsci.tools.fileutil.get_date()``.
 
     Returns
     -------
@@ -794,7 +797,7 @@ def create_table_from_table(output, useafter, imphttab, **kwargs):
     """
     nextend=3 #default number of computed extensions
     extra_exten=list()
-    
+
     with fits.open(imphttab) as imp:
         detector=imp[0].header['DETECTOR']
         basemode=''
@@ -804,11 +807,11 @@ def create_table_from_table(output, useafter, imphttab, **kwargs):
         print(nextend)
         if nextend > 3:
             for ext in range(4,nextend+1,1):
-                extra_exten.append(imp[ext].header['extname'])            
-    
+                extra_exten.append(imp[ext].header['extname'])
+
     kwargs['mode_list'] = modes
     create_table(output,basemode,detector,useafter, **kwargs)
-        
+
     #if there are more than 3 extensions assume they are static and append them to the output file
     if extra_exten:
         junkfile=tempfile.NamedTemporaryFile(dir='./',delete=False)
