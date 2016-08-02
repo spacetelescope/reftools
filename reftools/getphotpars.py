@@ -6,8 +6,8 @@ pipelines.
 
 To calculate a single set of keywords use the function `get_phot_pars`.
 
-If you are calculating for several obsmodes from a single IMPHTTAB file it's best
-to use the `GetPhotPars` class. For example::
+If you are calculating for several obsmodes from a single IMPHTTAB file it's
+best to use the `GetPhotPars` class. For example::
 
   get_phot = GetPhotPars(imphttab)
   for obs in obsmodes:
@@ -24,14 +24,16 @@ Right now, the only values that pysynphot computes are
 PHOTFLAM, PHOTPLAM and PHOTBW
 
 """
+from __future__ import absolute_import, division, print_function
 
 from astropy.io import fits as pyfits
 import numpy as np
 
-import _computephotpars
+from . import _computephotpars
 
 __version__ = '0.1.2'
 __vdate__ = '15-Apr-2014'
+
 
 class ImphttabError(StandardError):
   """
@@ -67,13 +69,10 @@ def get_phot_pars(obsmode, imphttab):
 
   """
   get_phot = GetPhotPars(imphttab)
-
   results_dict = get_phot.get_phot_pars(obsmode)
-
   get_phot.close()
-
-
   return results_dict
+
 
 class GetPhotPars(object):
   """
@@ -211,8 +210,8 @@ class GetPhotPars(object):
 
   def _get_row(self,obsmode,ext):
     """
-    Return the `pyfits.FITS_rec` object corresponding to the table row from extension
-    ext that has matching `obsmode`.
+    Return the `pyfits.FITS_rec` object corresponding to the table row from
+    extension ext that has matching `obsmode`.
 
     Parameters
     ----------
@@ -344,8 +343,3 @@ class GetPhotPars(object):
     """
 
     return _computephotpars.compute_value(row_struct, par_struct)
-
-
-
-
-

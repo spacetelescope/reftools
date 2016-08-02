@@ -1,12 +1,12 @@
-""" makedxy - Generate DXY reference files from a grid of points
+"""makedxy - Generate DXY reference files from a grid of points
 
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function
 
 import os
+
 import numpy as np
 from astropy.io import fits as pyfits
-from scipy import ndimage
 
 
 # replaced calls to wu.readcols() with:
@@ -116,12 +116,14 @@ def get_template_hdr(template,extname,extver=1):
 
     return pyfits.getheader(template,extn)
 
+
 def convert_ascii_to_array(x,y,vals):
     """ Convert a list of values 'vals' corresponding to pixel positions x,y
         into an array.
     """
     varr = vals.reshape([y.max(),x.max()])
     return varr
+
 
 def expand_array(input,output_shape,spline_order=1):
     """ Expand the input array 'input' to create a new array
@@ -134,6 +136,8 @@ def expand_array(input,output_shape,spline_order=1):
         based on the recipe posted in the SciPy cookbook at:
             http://www.scipy.org/Cookbook/Interpolation
     """
+    from scipy import ndimage
+
     # define range of x and y values spanned by input array
     stepx = output_shape[1]//(input.shape[1]-1)
     stepy = output_shape[0]//(input.shape[0]-1)
@@ -157,6 +161,7 @@ def expand_array(input,output_shape,spline_order=1):
     output = ndimage.map_coordinates(input,coords,order=spline_order)
 
     return output
+
 
 def help():
     print(__doc__)

@@ -5,4 +5,3 @@ Calculate Photometry Keywords from IMPHTTAB
 
 .. automodule:: reftools.getphotpars
    :members:
-   

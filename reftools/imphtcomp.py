@@ -2,23 +2,12 @@
 Tools for comparing  two IMPHTTAB tables from the same instrument and detector.
 
 """
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 
 import numpy as np
-
-import matplotlib.pyplot as plt
-from matplotlib.figure import SubplotParams
-from matplotlib.ticker import MaxNLocator
-from matplotlib.ticker import FormatStrFormatter
-
 from astropy.io import fits as pyfits
-
-try:
-  import pysynphot as S
-except ImportError:  # So RTD would build
-  pass
 
 __version__ = '1.0.2'
 __vdate__ = '25-Jul-2011'
@@ -394,6 +383,11 @@ class ImphttabComp(object):
       Defaults to 'imphttab_comp.pdf'.
 
     """
+    import matplotlib.pyplot as plt
+    from matplotlib.figure import SubplotParams
+    from matplotlib.ticker import MaxNLocator
+    from matplotlib.ticker import FormatStrFormatter
+
     spars = SubplotParams(left=0.05,bottom=0.15,right=0.95,top=0.85,
                           wspace=0.22,hspace=0.3)
     fig = plt.figure(figsize=(12,4),subplotpars=spars)

@@ -1,16 +1,14 @@
 #!/usr/bin/env python
-import os
-import subprocess
 import sys
 from glob import glob
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, Extension
 
 # Submodule
 sys.path.insert(1, 'relic')
 import relic.release
 
 version = relic.release.get_info()
-relic.release.write_template(version, 'lib/reftools')
+relic.release.write_template(version, 'reftools')
 
 setup(
     name='reftools',
@@ -21,6 +19,7 @@ setup(
     description=('Set of tools used to support creation of calibration '
                  'reference files for Hubble Space Telescope'),
     url='https://github.com/spacetelescope/reftools',
+    license='BSD',
     classifiers=[
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
@@ -30,34 +29,25 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=[
-        'astropy',
-        'calcos',
-        'nose',
-        'numpy',
-        'scipy',
-        'sphinx',
-        'stsci.imagestats',
-        'stsci.sphinxext',
-        'stsci.tools',
-        'stwcs'
+        'astropy>=1.1',
+        'numpy'
     ],
-    package_dir={
-        '': 'lib'
-    },
-    packages=find_packages('lib'),
+    tests_require=['nose'],
+    packages=['reftools', 'reftools.tests'],
+    package_dir={'reftools': 'reftools'},
     package_data={
         'reftools': [
-            'data/*',
-            'pars/*',
-            '*.help',
-            '*.rules',
-            'LICENSE.txt',
-        ]
+            'data/*.*',
+            'data/pctetab/*.*',
+            'pars/*.*',
+            '*.help'
+        ],
+        'reftools.tests': ['data/*.*']
     },
     entry_points={
         'console_scripts': ['tdspysyn=reftools.tdspysyn:main']
     },
     ext_modules=[
-        Extension('reftools._computephotpars', glob('src/*.c'))
+        Extension('reftools._computephotpars', glob('reftools/src/*.c'))
     ]
 )

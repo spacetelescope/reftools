@@ -3,7 +3,7 @@ or set of segmented graph tables, and produces a Graph instance
 that can be traversed.
 
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, print_function, division
 
 # STDLIB
 import os
@@ -13,13 +13,8 @@ import re
 from astropy.io import fits
 from astropy import log
 
-# PYSYNPHOT
-from pysynphot import locations
-from pysynphot.locations import irafconvert
-
 # LOCAL
 from .graphtab import Graph, Node, Edge
-
 
 __all__ = ['read_graphtable']
 
@@ -35,6 +30,10 @@ def read_graphtable(fname, tmcfile=None, tmtfile=None, offset=0, verbose=False):
     at which you want the resulting Graph to start.
 
     """
+    # PYSYNPHOT
+    from pysynphot import locations
+    from pysynphot.locations import irafconvert
+
     fname = irafconvert(fname)
     if tmcfile is not None:
         tmcfile = irafconvert(tmcfile)

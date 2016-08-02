@@ -2,27 +2,14 @@
 Tools for comparing pysynphot and synphot photometry calculations.
 
 """
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 import csv
 import tempfile
 
 import numpy as np
-
-import matplotlib.pyplot as plt
-from matplotlib.figure import SubplotParams
-from matplotlib.ticker import MaxNLocator
-from matplotlib.ticker import FormatStrFormatter
-
 from astropy.io import fits as pyfits
-
-try:
-  import pysynphot as S
-  from pyraf import iraf
-  from iraf import stsdas, hst_calib, synphot
-except ImportError:  # So RTD would build
-  pass
 
 __version__ = '1.0.0'
 __vdate__ = '25-Jul-2011'
@@ -51,6 +38,10 @@ class SynPysynComp(object):
 
   """
   def __init__(self,imphttab):
+    import pysynphot as S
+    from pyraf import iraf
+    from iraf import stsdas, hst_calib, synphot
+
     self._read_obsmodes(imphttab)
 
     self.spec = S.FlatSpectrum(1,fluxunits='flam')
@@ -320,6 +311,10 @@ class SynPysynPlot(object):
 
   """
   def __init__(self,csvfile):
+    import matplotlib.pyplot as plt
+    from matplotlib.figure import SubplotParams
+    from matplotlib.ticker import MaxNLocator
+
     self._load_csv(csvfile)
 
     spars = SubplotParams(left=0.08,bottom=0.05,right=0.98,top=0.93,

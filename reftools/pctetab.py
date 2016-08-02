@@ -1,17 +1,5 @@
 """Functions for ACS PCTETAB reference file.
 
-:Authors: Pey Lian Lim, Matt Davis
-
-:Organization: Space Telescope Science Institute
-
-:History:
-    * 2010-08-31 PLL created this module.
-    * 2010-11-09 PLL added RN2_NIT keyword and updated documentation.
-    * 2011-04-25 MRD updated for new CTE algorithm parameters
-    * 2011-07-18 MRD updated to handle time dependence
-    * 2011-11-29 MRD updated with column-by-column CTE scaling
-    * 2013-08-13 PLL removed depreciated PyFITS calls and cleaned up codes.
-
 Examples
 --------
 >>> from reftools import pctetab
@@ -22,9 +10,18 @@ Examples
 ...     'pctetab_column_scaling.txt', history_file='pctetab_history.txt')
 
 """
-from __future__ import division, print_function
+# :Authors: Pey Lian Lim, Matt Davis
+# :Organization: Space Telescope Science Institute
+# :History:
+#    * 2010-08-31 PLL created this module.
+#    * 2010-11-09 PLL added RN2_NIT keyword and updated documentation.
+#    * 2011-04-25 MRD updated for new CTE algorithm parameters
+#    * 2011-07-18 MRD updated to handle time dependence
+#    * 2011-11-29 MRD updated with column-by-column CTE scaling
+#    * 2013-08-13 PLL removed depreciated PyFITS calls and cleaned up codes.
+from __future__ import absolute_import, division, print_function
 
-# External modules
+# STDLIB
 import glob
 import sys
 import os
@@ -32,7 +29,6 @@ import os
 # THIRD-PARTY
 import numpy as np
 from astropy.io import fits
-
 
 __version__ = '1.2.0'
 __vdata__ = '13-Aug-2013'

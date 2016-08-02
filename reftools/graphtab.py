@@ -4,7 +4,7 @@ a recursion functionality for generating all possible obsmodes
 supported by the table.
 
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, print_function, division
 
 # STDLIB
 import os
@@ -17,7 +17,6 @@ from astropy.io import fits
 
 # THIRD-PARTY
 import numpy as np
-
 
 __all__ = ['Node', 'Edge', 'Path', 'Graph']
 

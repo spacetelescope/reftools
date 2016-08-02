@@ -14,12 +14,6 @@
 import os
 import sys
 
-# work around that annoying warning that pysynphot always prints
-import warnings
-with warnings.catch_warnings() :
-    warnings.simplefilter('ignore')
-    import pysynphot
-
 # For reftools version
 import reftools
 
@@ -237,5 +231,6 @@ intersphinx_mapping = {
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('http://matplotlib.org/', None),
-    'astropy': ('http://docs.astropy.org/en/stable/', None)
+    'astropy': ('http://docs.astropy.org/en/stable/', None),
+    'pysynphot': ('https://pysynphot.readthedocs.io/en/stable/', None)
     }

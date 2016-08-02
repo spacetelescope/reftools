@@ -1,26 +1,26 @@
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function
 
-from astropy.io import fits as pyfits
 import os
 
-try:
-    from stsci.tools import fileutil,parseinput
-except ImportError:  # So RTD would build
-    pass
-
 import numpy as np
+from astropy.io import fits as pyfits
 
 __version__ = '0.3.1'
 __vdate__ = '2010-04-26'
 
-def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False):
-    ''' Build subsampled CDBS _dxy files from full-frame(Jay's) DXM and DYM images.
 
-        If there is a column/row correction provided, it will be removed
-        before resampling the full DXM,DYM images. In that case, the
-        'corrext' parameter specifies the extension from the full-sized
-        image that needs to have this column/row correction removed.
-    '''
+def dxy(dgeofile, filter=None, colcorr=None, corrext='DX', minsize=32,
+        debug=False):
+    """Build subsampled CDBS _dxy files from full-frame (Jay's)
+    DXM and DYM images.
+
+    If there is a column/row correction provided, it will be removed
+    before resampling the full DXM,DYM images. In that case, the
+    'corrext' parameter specifies the extension from the full-sized
+    image that needs to have this column/row correction removed.
+
+    """
+    from stsci.tools import fileutil
 
     wheel1 = ['F475W', 'F555W', 'F606W', 'F850LP', 'F625W',
               'F658N', 'F775W', 'F502N', 'F550M']
@@ -168,6 +168,7 @@ def dxy(dgeofile, filter=None, colcorr=None,corrext='DX',minsize=32,debug=False)
     fixheader(filter,newname, odgeofile)
     print('Finished creating new file: ',newname)
 
+
 def resample_chip(chip,mesh,corrxy=None,chipname=None):
     """ Apply resampling operations to a single chip's array.
     If provided, also remove column/row correction from array prior to resampling.
@@ -181,6 +182,7 @@ def resample_chip(chip,mesh,corrxy=None,chipname=None):
         outimg.writeto(chipname)
 
     return chip[mesh[1].astype(np.int), mesh[0].astype(np.int)]
+
 
 def fixheader(filter,filename, oldname):
     ''' Clean up dxy headers'''
