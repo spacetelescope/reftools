@@ -1,5 +1,5 @@
 """Use this module to create an IMPHTTAB for an instrument."""
-from __future__ import print_function, division
+from __future__ import absolute_import, print_function, division
 
 # STDLIB
 import os
@@ -307,7 +307,7 @@ def save_skipped_obsmodes(output, obsmodes):
         output = output[:ind] + '_skipped.txt'
     else:
         output = output + '_skipped.txt'
-    with open(output,'w') as f:
+    with open(output, 'w') as f:
         for skipped in obsmodes:
             f.write(skipped + '\n')
 
@@ -393,18 +393,18 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     else:
         nrows = len(obsmodes)
 
-    fpars_vals = list() # list of parameterized variable names for each obsmode/row
-    npar_vals = list() # number of parameterized variables for each obsmode/row
+    fpars_vals = list()  # list of parameterized var names for each obsmode/row
+    npar_vals = list()  # number of parameterized vars for each obsmode/row
     flam_datacol_vals = list()
     plam_datacol_vals = list()
     bw_datacol_vals = list()
     fpars_sz = 1
 
-    # Compute 'globally' required values: max number of parameterized variables,...
+    # Compute 'globally' required values: max num of parameterized variables
     for filt in obsmodes:
         # For each filter combination (row in the table)...
-        basename,fpars = parse_filters(filt)
-        # keep track of how many parameterized variables are used in this obsmode
+        basename, fpars = parse_filters(filt)
+        # keep track of how many parameterized vars are used in this obsmode
         npars = len(fpars)
         npar_vals.append(npars)
         fpars_vals.append(fpars)
@@ -426,22 +426,23 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         flam_datacol_vals.append('PHOTFLAM' + nstr)
         plam_datacol_vals.append('PHOTPLAM' + nstr)
         bw_datacol_vals.append('PHOTBW' + nstr)
-    #
-    # At this point, all the interpretation for the following columns has been done:
+
+    # At this point, all interpretation for the following cols has been done:
     # OBSMODE, DATACOL (for all 3 tables), PEDIGREE, DESCRIP
     #
-    # Start by determining the maximum number of parameters in any given obsmode
-    max_npars = np.array(npar_vals,np.int32).max()
+    # Start by determining the maximum num of parameters in any given obsmode
+    max_npars = np.array(npar_vals, np.int32).max()
     log.info('MAX_NPARS: {0}   NROWS: {1}'.format(max_npars, nrows))
 
-    #
     # Now, define empty lists for NELEM* and PAR*VALUES columns
     #
-    nelem_rows = np.zeros([nrows,max_npars], np.int16) # nelem_rows[i] for each column i
+    # nelem_rows[i] for each column i
+    nelem_rows = np.zeros([nrows, max_npars], np.int16)
     parvals_rows = list()
     filtdata_set = dict()
-    parnames_rows = np.chararray([nrows,max_npars], itemsize=fpars_sz) # create columns for PAR*NAMES
-    parnames_rows[:] = ''*fpars_sz # initialize with blanks, just to be safe
+    # create columns for PAR*NAMES
+    parnames_rows = np.chararray([nrows, max_npars], itemsize=fpars_sz)
+    parnames_rows[:] = '' * fpars_sz  # initialize with blanks, just to be safe
 
     for nr in range(nrows):
         # create path through graphtab for this obsmode, reading in values for
@@ -449,16 +450,16 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         obspath = x.traverse(obsmodes[nr], verbose=False)
         filtdata = obspath._params
 
-        # Create a master set of parameterized variables and their ranges of values
+        # Create a master set of parameterized vars and their ranges of values
         for p in filtdata:
-            if (p.upper(),obsmodes[nr]) not in list(filtdata_set.keys()):
-                filtdata_set[(p.upper(),obsmodes[nr])] = filtdata[p]
+            if (p.upper(), obsmodes[nr]) not in list(filtdata_set.keys()):
+                filtdata_set[(p.upper(), obsmodes[nr])] = filtdata[p]
 
         fpars = fpars_vals[nr]
         npars = npar_vals[nr]
         pvals = list()
 
-        #extract entries from 'filtdata' for only the values given in 'fpars'
+        # extract entries from 'filtdata' for only the values given in 'fpars'
         for i in range(max_npars):
             if len(fpars) == 0:
                 pvals.append(np.array([0]))
@@ -466,19 +467,18 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
                 if i < len(fpars):
                     f = fpars[i].upper()
                     nelem = len(filtdata[f])
-                    nelem_rows[nr,i] = nelem
+                    nelem_rows[nr, i] = nelem
                     if filtdata[f] == '':
                         pvals.append(np.array([0]))
                     else:
                         pvals.append(np.array(filtdata[f]))
-                        parnames_rows[nr,i] = f
+                        parnames_rows[nr, i] = f
                 else:
                     pvals.append(np.array([0]))
 
         parvals_rows.append(pvals)
 
-    #
-    # All NELEM* and PAR*VALUES columns are correctly populated up to this point
+    # All NELEM* and PAR*VALUES cols are correctly populated up to this point
     # in the code.
     #
     # Now, define the values for the actual results columns: PHOT*LAM, PHOTBW
@@ -501,8 +501,9 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         sys.stdout.flush()
 
     for nr in range(nrows):
+        # Provide some indication of which row is being worked
         if verbose:
-            log.info('Row: {0}'.format(nr + 1))  # Provide some indication of which row is being worked
+            log.info('Row: {0}'.format(nr + 1))
             sys.stdout.flush()
 
         obsmode = obsmodes[nr]
@@ -512,12 +513,12 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         lenpars = list()
         for f in fpars:
             f = f.upper()
-            filtdict[f] = filtdata_set[(f,obsmode)]
+            filtdict[f] = filtdata_set[(f, obsmode)]
             lenpars.append(len(filtdict[f]))
 
         # Now build up list of all obsmodes with all combinations of
         # parameterized variables values
-        olist = expand_obsmodes(obsmode,filtdict)
+        olist = expand_obsmodes(obsmode, filtdict)
 
         nmodes = len(olist)
 
@@ -532,7 +533,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
 
         skip = False
 
-        for n,fullmode in enumerate(olist):
+        for n, fullmode in enumerate(olist):
             try:
                 value = compute_values(fullmode, component_dict)
             except ValueError as e:
@@ -599,11 +600,11 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
             fvals.append(0)
             pvals.append(0)
             bvals.append(0)
-        for col in range(1,max_npars+1):
+        for col in range(1, max_npars + 1):
             if col == npars:
-                fvals.append(np.array(photflam,np.float64))
-                pvals.append(np.array(photplam,np.float64))
-                bvals.append(np.array(photbw,np.float64))
+                fvals.append(np.array(photflam, np.float64))
+                pvals.append(np.array(photplam, np.float64))
+                bvals.append(np.array(photbw, np.float64))
             else:
                 fvals.append(np.array([0]))
                 pvals.append(np.array([0]))
@@ -612,7 +613,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         plam_rows.append(pvals)
         bw_rows.append(bvals)
 
-        del photflam,photplam,photbw,filtdict,lenpars
+        del photflam, photplam, photbw, filtdict, lenpars
 
     del component_dict
 
@@ -659,18 +660,20 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         bw_cols.append(bvals)
 
     ped_vals = [fits.getval(tmctab, 'pedigree', 0)] * len(nmode_vals)
-    descrip_str = 'Generated {0} from {1}, mkimphttab version {2}, ' \
+    descrip_str = (
+        'Generated {0} from {1}, mkimphttab version {2}, '
         'pysynphot version {3}'.format(
-        get_date(), os.path.basename(tmgtab), __version__, S.__version__)
+            get_date(), os.path.basename(tmgtab), __version__, S.__version__))
     descrip_vals = [descrip_str] * len(nmode_vals)
 
-    # Finally, create the structures needed to define this row in the FITS table
+    # Finally, create structures needed to define this row in the FITS table
 
-    # Define each column in the table based on max_npars which are not different
+    # Define each col in the table based on max_npars which are not different
     # from one extension to the other
     obsmode_col = fits.Column(name='OBSMODE', format='40A', array=obsmodes)
     pedigree_col = fits.Column(name='PEDIGREE', format='30A', array=ped_vals)
-    descrip_col = fits.Column(name='DESCRIP', format='110A', array=descrip_vals)
+    descrip_col = fits.Column(name='DESCRIP', format='110A',
+                              array=descrip_vals)
     datacol_col = {}
     datacol_col['PHOTFLAM'] = fits.Column(
         name='DATACOL', format='12A', array=flam_datacol_vals)
@@ -683,6 +686,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     nelem_tabcols = list()
     parnames_tabcols = list()
     parnames_format = str(fpars_sz) + "A"
+
     # for each parameterized element, create a set of columns specifying the
     # range of values for that parameter and the number of elements covering
     # that range namely, the PAR<n>VALUES and NELEM<n> columns
@@ -690,7 +694,8 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         nelem_tabcols.append(fits.Column(
             name="NELEM"+str(p+1), format="I", array=nelem_cols[p]))
         parvals_tabcols.append(fits.Column(
-            name="PAR"+str(p+1)+"VALUES", format="PD()", array=parvals_cols[p]))
+            name="PAR"+str(p+1)+"VALUES", format="PD()",
+            array=parvals_cols[p]))
         parnames_tabcols.append(fits.Column(
             name="PAR"+str(p+1)+"NAMES", format=parnames_format,
             array=parnames_cols[p]))
@@ -794,34 +799,33 @@ def create_table_from_table(output, useafter, imphttab, **kwargs):
     kwargs : dict
         Keywords accepted by :func:`create_table`, except ``mode_list``.
 
-
     """
-    nextend=3 #default number of computed extensions
-    extra_exten=list()
+    nextend = 3  # default number of computed extensions
+    extra_exten = list()
 
     with fits.open(imphttab) as imp:
-        detector=imp[0].header['DETECTOR']
-        basemode=''
+        detector = imp[0].header['DETECTOR']
+        basemode = ''
         modes = np.char.strip(imp[1].data['OBSMODE']).tolist()
-        #check if there are more than the 3 computed extensions
-        nextend=imp[0].header['NEXTEND']
+        # check if there are more than the 3 computed extensions
+        nextend = imp[0].header['NEXTEND']
         print(nextend)
         if nextend > 3:
-            for ext in range(4,nextend+1,1):
+            for ext in range(4, nextend + 1, 1):
                 extra_exten.append(imp[ext].header['extname'])
 
     kwargs['mode_list'] = modes
-    create_table(output,basemode,detector,useafter, **kwargs)
+    create_table(output, basemode, detector, useafter, **kwargs)
 
-    #if there are more than 3 extensions assume they are static and append them to the output file
+    # if there are more than 3 extensions assume they are static and
+    # append them to the output file
     if extra_exten:
-        junkfile=tempfile.NamedTemporaryFile(dir='./',delete=False)
-        print("Adding static extensions to output",extra_exten)
+        junkfile = tempfile.NamedTemporaryFile(dir='./', delete=False)
+        print("Adding static extensions to output", extra_exten)
         with fits.open(imphttab) as imp:
             with fits.open(output) as outfile:
-                for ext in range(4,nextend+1,1):
+                for ext in range(4, nextend + 1, 1):
                     outfile.append(imp[ext])
                 outfile.writeto(junkfile.name)
         os.remove(output)
-        os.rename(junkfile.name,output)
-
+        os.rename(junkfile.name, output)
