@@ -2,7 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from reftools.interpretdq import DQParser
+from ..interpretdq import DQParser
 
 __all__ = ['test_one_flag']
 

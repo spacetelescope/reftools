@@ -1,21 +1,13 @@
-from __future__ import division, print_function # confidence high
+"""Code for interpreting ASCII files."""
+from __future__ import absolute_import, division, print_function
 
-import sys,os
-import numpy as np
-
-from astropy.io import fits as pyfits
-try:
-    import pylab as pl
-    import stsci.imagestats as imagestats
-    from stsci.tools import fileutil
-except ImportError:  # So RTD would build
-    pass
+import sys
+import os
 import datetime
 
+import numpy as np
+from astropy.io import fits as pyfits
 
-"""
-Code for interpreting ASCII files
-"""
 
 def clean_separators(line,sep,niter=10):
     for i in range(niter):
@@ -25,7 +17,8 @@ def clean_separators(line,sep,niter=10):
     return lnew
 
 
-def write_xycols(infile,outfile,cols=[1,2,4,5],scale=None,center=[2048,1024],wxin=True):
+def write_xycols(infile, outfile, cols=[1,2,4,5], scale=None,
+                 center=[2048,1024], wxin=True):
 
     fin = open(infile,'r')
     fout = open(outfile,'a+')
@@ -50,11 +43,14 @@ def write_xycols(infile,outfile,cols=[1,2,4,5],scale=None,center=[2048,1024],wxi
     fout.close()
     print('[wtraxyutils.write_xycols] wrote out ',nlines,' to ',outfile)
 
+
 def DEGTORAD(deg):
     return (deg * np.pi / 180.)
 
+
 def RADTODEG(rad):
     return (rad * 180. / np.pi)
+
 
 def buildRotMatrix(theta):
     _theta = DEGTORAD(theta)
@@ -63,6 +59,7 @@ def buildRotMatrix(theta):
     _mrot[1] = (-np.sin(_theta),np.cos(_theta))
 
     return _mrot
+
 
 def write_xy_file(outname,xydata,append=False,format="%20.6f"):
     if not append:
@@ -75,6 +72,7 @@ def write_xy_file(outname,xydata,append=False,format="%20.6f"):
         fout1.write(outstr+"\n")
     fout1.close()
     print('wrote XY data to: ',outname)
+
 
 def apply_poly(cx,cy,order,pos=[[0.,0.],[0.,1.],[1.,0.],[1.,1.]]):
     ''' Apply a polynomial to a unit box.
@@ -91,6 +89,7 @@ def apply_poly(cx,cy,order,pos=[[0.,0.],[0.,1.],[1.,0.],[1.,1.]]):
 
     return c
 
+
 def rot_poly(cx,cy,rot):
     ''' Rotate poly coeffs by 'rot' degrees.
     '''
@@ -102,6 +101,7 @@ def rot_poly(cx,cy,rot):
     rcy.shape = cy.shape
 
     return rcx,rcy
+
 
 def apply_tdd_coeffs(x,y,alpha,beta,theta,xoff=None,yoff=None,recenter=False,direct_tdd=True):
 
@@ -127,6 +127,8 @@ def apply_tdd_coeffs(x,y,alpha,beta,theta,xoff=None,yoff=None,recenter=False,dir
             yd += yoff
 
     return xd,yd
+
+
 def apply_dq_values(infile,outfile,dqcol=3,cols=[0,1],dqlimit=-10.0,corr=[0.,0.]):
     ''' raw xy -> cleaned xy[dqlimit]
 
@@ -167,6 +169,7 @@ def readcols(infile,cols=[0,1,2,3]):
         outarr[n] = np.array(outarr[n],np.float64)
     return outarr
 
+
 def parse_phot_line(line):
     """ Converts line with photometry into a list of values without blanks
     """
@@ -177,6 +180,8 @@ def parse_phot_line(line):
         lspl.remove('')
         nblanks = lspl.count('')
     return lspl
+
+
 def read_phot(photfile,aperture=None,col=1):
     """ Read in the photometry results as recorded in a photometry file written
     out by daophot.phot.  If None, it will pick the first non-1 aperture listed
@@ -226,6 +231,7 @@ def read_phot(photfile,aperture=None,col=1):
 
     return np.array(out,dtype=np.float32)
 
+
 def get_db_fit(dbfile,fit=None):
     """ Get the matrix solution found by geomap as stored in a database file.
         The 'fit' parameter(1-based, not zero based) specifies which fit from
@@ -257,6 +263,7 @@ def get_db_fit(dbfile,fit=None):
             out.append(float(vals[-1]))
 
     return out[0],out[1],np.array([[out[2],out[3]],[out[4],out[5]]])
+
 
 def apply_db_fit(data,fit,xsh=0.0,ysh=0.0):
     xy1x = data[0]
@@ -296,6 +303,7 @@ def transform_dgeo_for_sip(fltimage,update=True):
         WDRIZZLE in SIP mode. This is only intended to be used for testing the
         validity of this form of the DGEOFILE for use with SIP headers.
     """
+    from stsci.tools import fileutil
 
     flt_phdr = pyfits.getheader(fltimage)
     # Start by parsing the input filename and creating the output name
@@ -372,10 +380,17 @@ def transform_dgeo_for_sip(fltimage,update=True):
         print('Input file ',fltimage,' updated with new DGEOFILE.')
         print('==> Old DGEOFILE archived in ODGEOFIL keyword')
 
-def compare_matched_pos(matchfile,img1,img2, width=10,grid=[4,3],cmap=pl.gray):
+
+def compare_matched_pos(matchfile, img1, img2, width=10, grid=[4,3],
+                        cmap=None):
     ''' Display image slices from each image around each object for visual
         verification of matches.
     '''
+    import pylab as pl
+
+    if cmap is None:
+        cmap = pl.gray
+
     # Read in arrays for each image
     arr1 = pyfits.getdata(img1,0)
     arr2 = pyfits.getdata(img2,0)
@@ -416,6 +431,7 @@ def compare_matched_pos(matchfile,img1,img2, width=10,grid=[4,3],cmap=pl.gray):
             else:
                 input("Enter to continue to next set of images...")
 
+
 def find_min_match_cols(matchroot,xcen,ycen,matchextn=['match','db'],fit=None,
                         cols1=[0,1],cols2=[2,3],limit=0.5):
     ''' Select out those rows from the match file which fall within a
@@ -423,6 +439,8 @@ def find_min_match_cols(matchroot,xcen,ycen,matchextn=['match','db'],fit=None,
         The coordinates are also shifted back into the image frame by applying
         the CRPIX1,CRPIX2 of the output frame (given as xcen,ycen).
     '''
+    import pylab as pl
+
     match = matchroot+'.'+matchextn[0]
     dbfile = matchroot+'.'+matchextn[1]
     if not os.path.exists(match):
@@ -498,6 +516,7 @@ def decimal_date(dateobs,timeobs=None):
 
     return ddate
 
+
 def plot_fltndrz_linkfile(rootname,fltdrzcols=[8,9],drzcols=[0,1],limit=1.0,vector=False,scale=5,title=None):
     # Name of file generated by Jay's program fltNdrz.e which contains
     # the positions derived from the FLT image, DRZ image, and transformed FLT positions
@@ -511,10 +530,15 @@ def plot_fltndrz_linkfile(rootname,fltdrzcols=[8,9],drzcols=[0,1],limit=1.0,vect
     make_vector_plot(xy_wxy_file,data=[drzx,drzy,drzimgx,drzimgy],limit=limit,vector=vector,scale=scale,title=title)
 
 
-def make_vector_plot(coordfile,columns=[0,1,2,3],data=None,title=None, axes=None, every=1,
-                    limit=None, xlower=None, ylower=None, output=None, headl=4,headw=3,
-                    xsh=0.0,ysh=0.0,fit=None,vector=True,scale=5,append=False,linfit=False,rms=True):
+def make_vector_plot(
+        coordfile, columns=[0,1,2,3], data=None, title=None, axes=None,
+        every=1, limit=None, xlower=None, ylower=None, output=None, headl=4,
+        headw=3, xsh=0.0, ysh=0.0, fit=None, vector=True, scale=5,
+        append=False, linfit=False, rms=True):
     """ Convert a XYXYMATCH file into a vector plot. """
+    import pylab as pl
+    import stsci.imagestats as imagestats
+
     if data is None:
         data = readcols(coordfile,cols=columns)
 
@@ -614,4 +638,3 @@ def make_vector_plot(coordfile,columns=[0,1,2,3],data=None,title=None, axes=None
                 yr = [m*lx[0]+c,lx[-1]*m+c]
                 pl.plot([lx[0],lx[-1]],yr,'r')
                 pl.text(lx[0]+lxr,plot[1].max()+lyr,"%0.5g*x + %0.5g [%0.5g,%0.5g]"%(m,c,yr[0],yr[1]),color='r')
-

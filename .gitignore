@@ -1,10 +1,49 @@
-RELIC-INFO
-relic/
-lib/*/version.py
-build/
-dist/
-*.pyc
+# Compiled files
+*.py[cod]
+*.a
 *.o
 *.so
+__pycache__
+
+# RELIC
+RELIC-INFO
+reftools/version.py
+
+# Other generated files
+htmlcov
+.coverage
+MANIFEST
+
+# Sphinx
+doc/build
+
+# Eclipse editor project files
+.project
+.pydevproject
+.settings
+
+# Pycharm editor project files
+.idea
+
+# Packages/installer info
+*.egg*
 *.egg-info
-*.swp
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+distribute-*.tar.gz
+
+# Other
+.cache
+.tox
+.*.sw[op]
+*~
+
+# Mac OSX
+.DS_Store

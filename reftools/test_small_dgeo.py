@@ -1,26 +1,15 @@
 #!/usr/bin/env python
-
-from __future__ import absolute_import, division, print_function # confidence high
+"""Module for manual testing of DGEO, not an actual unit test."""
+from __future__ import absolute_import, division, print_function
 
 import os
 import sys
 import warnings
+#import gc  # call gc.collect() occasionally
 
 import numpy as np
 from astropy.io import fits as pyfits
-try:
-    from stsci.tools import fileutil
-except ImportError:  # So RTD would build
-    pass
 from astropy.wcs import WCS, DistortionLookupTable
-from stwcs import wcsutil, updatewcs
-
-try:
-    import stsci.numdisplay as numdisplay
-except ImportError:  # So RTD would build
-    pass
-
-from . import wtraxyutils
 
 try:
     from matplotlib import pyplot as pl
@@ -28,15 +17,18 @@ try:
 except ImportError:
     has_matplotlib = False
     warnings.warn('Matplotlib not installed; plots will not be displayed.')
-#pl.hold(False)
+# else:
+#     pl.hold(False)
+
+from . import wtraxyutils
 
 __version__ = '0.3.1'
 __vdate__ = '2010-04-16'
 
-#import gc  #call gc.collect() occasionally
 
 def help():
     print(run.__doc__)
+
 
 def build_grid_arrays(nx,ny,step):
     grid = [nx,ny,step]
@@ -51,7 +43,9 @@ def build_grid_arrays(nx,ny,step):
 
     return xarr,yarr
 
+
 def transform_d2im_dgeo(img,extver,xarr,yarr,verbose=False):
+    from stwcs import wcsutil
 
     print('setting up WCS object for ',img,'[sci,',str(extver),']')
 
@@ -69,6 +63,7 @@ def transform_d2im_dgeo(img,extver,xarr,yarr,verbose=False):
         print(yout.min(),yout.max(),yout.shape)
 
     return xout,yout
+
 
 def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None,vmax=None,plot_offset=0,plot_samp=32):
     """
@@ -99,6 +94,9 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
         out to the same file, with a separate file for each chip.
 
     """
+    from stsci.tools import fileutil
+    from stwcs import updatewcs
+
     if update:
         # update input SCI file to be consistent with reference files in header
         print('Updating input file ',scifile,' to be consistent with reference files listed in header...')
@@ -286,7 +284,11 @@ def run(scifile,dgeofile=None,output=False,match_sci=False,update=True,vmin=None
     if output:
         hdulist.close()
 
+
 def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
+    from stsci.tools import fileutil
+    from stwcs import updatewcs
+
     if update:
         # update input SCI file to be consistent with reference files in header
         print('Updating input file ',subarray,' to be consistent with reference files listed in header...')
@@ -415,6 +417,7 @@ def compare_sub_to_full_sci(subarray,full_sci,output=False,update=True):
     if output:
         hdulist.close()
 
+
 def dgeo_function1(x,y):
     """ returns the dgeofile array value for pixel(s) x,y
         for a simple basic function.
@@ -423,6 +426,7 @@ def dgeo_function1(x,y):
     """
     return 0.01 + 0.005*(x/4096.0) + 0.005*(y/2048.0)
 
+
 def dgeo_function2(x,y):
     """ returns the dgeofile array value for pixel(s) x,y
         for a simple basic function.
@@ -430,6 +434,7 @@ def dgeo_function2(x,y):
         used to compare with an NPOLFILE generated from this test file.
     """
     return -0.01 - 0.005*(x/4096.0) + 0.01*(y/2048.0)
+
 
 def create_testdgeo(template,output,xfunc=dgeo_function1,yfunc=dgeo_function2):
     """ Generate an artificial DGEOFILE with very simple functions that will

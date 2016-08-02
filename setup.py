@@ -1,39 +1,26 @@
 #!/usr/bin/env python
-import os
-import subprocess
 import sys
 from glob import glob
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, Extension
 
-
-if os.path.exists('relic'):
-    sys.path.insert(1, 'relic')
-    import relic.release
-else:
-    try:
-        import relic.release
-    except ImportError:
-        try:
-            subprocess.check_call(['git', 'clone',
-                'https://github.com/jhunkeler/relic.git'])
-            sys.path.insert(1, 'relic')
-            import relic.release
-        except subprocess.CalledProcessError as e:
-            print(e)
-            exit(1)
-
+# Submodule
+sys.path.insert(1, 'relic')
+import relic.release
 
 version = relic.release.get_info()
-relic.release.write_template(version, 'lib/reftools')
+relic.release.write_template(version, 'reftools')
 
 setup(
-    name = 'reftools',
-    version = version.pep386,
-    author = 'Warren Hack, Nadezhda Dencheva, Vicki Laidler, Matt Davis, Megan Sosey, Pey Lian Lim, Mihai Cara',
-    author_email = 'help@stsci.edu',
-    description = 'Set of tools used to support creation of calibration reference files for Hubble Space Telescope',
-    url = 'https://github.com/spacetelescope/reftools',
-    classifiers = [
+    name='reftools',
+    version=version.pep386,
+    author=('Warren Hack, Nadezhda Dencheva, Vicki Laidler, Matt Davis, '
+            'Megan Sosey, Pey Lian Lim, Mihai Cara'),
+    author_email='help@stsci.edu',
+    description=('Set of tools used to support creation of calibration '
+                 'reference files for Hubble Space Telescope'),
+    url='https://github.com/spacetelescope/reftools',
+    license='BSD',
+    classifiers=[
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
@@ -41,40 +28,26 @@ setup(
         'Topic :: Scientific/Engineering :: Astronomy',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    install_requires = [
-        'astropy',
-        'calcos',
-        'nose',
-        'numpy',
-        'scipy',
-        'sphinx',
-        'stsci.imagestats',
-        'stsci.sphinxext',
-        'stsci.tools',
-        'stwcs'
+    install_requires=[
+        'astropy>=1.1',
+        'numpy'
     ],
-
-    package_dir = {
-        '':'lib'
-    },
-    packages = find_packages('lib'),
-    package_data = {
+    tests_require=['nose'],
+    packages=['reftools', 'reftools.tests'],
+    package_dir={'reftools': 'reftools'},
+    package_data={
         'reftools': [
-            'data/*',
-            'pars/*',
-            '*.help',
-            '*.rules',
-            'LICENSE.txt',
-        ]
+            'data/*.*',
+            'data/pctetab/*.*',
+            'pars/*.*',
+            '*.help'
+        ],
+        'reftools.tests': ['data/*.*']
     },
     entry_points={
-        'console_scripts': [
-            'tdspysyn=reftools.tdspysyn:main'
-        ]
+        'console_scripts': ['tdspysyn=reftools.tdspysyn:main']
     },
     ext_modules=[
-        Extension('reftools._computephotpars',
-            glob('src/*.c')
-        )
+        Extension('reftools._computephotpars', glob('reftools/src/*.c'))
     ]
 )

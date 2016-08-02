@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """tdspysyn - convert a COS or STIS TDS file to pysynphot throughput files"""
 
-from __future__ import division, print_function  # confidence unknown
+from __future__ import absolute_import, division, print_function
 
 __author__ = "Phil Hodge, STScI, February 2011."
 __usage__ = """
@@ -23,8 +23,8 @@ __usage__ = """
     % tdspysyn.py xyz_tds.fits thru 1100. 1700. 100. 55927. [none] [none]
 
 .. note:: make sure the file "tdspysyn" is on your executable path
-"""
 
+"""
 __taskname__ = "tdspysyn"
 __version__ = "0.1"
 __vdate__ = "2011 Feb 18"
@@ -33,17 +33,12 @@ import getopt
 import math
 import os
 import sys
+
 import numpy as np
 from astropy.io import fits as pyfits
 
-try:
-    from stsci.tools import parseinput, teal
-except ImportError:  # So RTD would build
-    pass
-
-from calcos import ccos
-
 DAYS_PER_YEAR = 365.25
+
 
 def main():
     """Convert a TDS table to pysynphot format."""
@@ -661,6 +656,7 @@ class CosTds (ConvertTds):
             row, interpreted from the input TDS table and interpolated
             to correspond to the values in `wavelength`.
         """
+        from calcos import ccos
 
         nwl = self.data.field ("nwl")[row]
         nt = self.data.field ("nt")[row]
@@ -757,6 +753,7 @@ class StisTds (ConvertTds):
             row, interpreted from the input TDS table and interpolated
             to correspond to the values in `wavelength`.
         """
+        from calcos import ccos
 
         nwl = self.data.field ("nwl")[row]
         nt = self.data.field ("nt")[row]
@@ -809,8 +806,10 @@ def run(configobj=None):
                     last_mjd=configobj["last_mjd"],
                     row=configobj["row"])
 
+
 def getHelpAsString(fulldoc=True):
     """Return help info from <module>.help in the script directory"""
+    from stsci.tools import teal
 
     if fulldoc:
         basedoc = __doc__
@@ -825,13 +824,15 @@ def getHelpAsString(fulldoc=True):
 
     return helpString
 
+
 # Set up doc string without the module level docstring included for
 # use with Sphinx, since Sphinx will already include module level docstring
 tdsToPysynphot.__doc__ = getHelpAsString(fulldoc=False)
 
+
 def help():
     print(getHelpAsString())
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     main()
