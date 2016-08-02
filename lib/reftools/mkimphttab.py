@@ -15,19 +15,12 @@ import numpy as np
 from astropy import log
 from astropy.io import fits
 
-# STSCI
-try:
-    import pysynphot as S
-    from pysynphot import refs
-except ImportError:  # So RTD would build
-    pass
-
 # LOCAL
 from . import graphfile as sgf
 
 __all__ = ['create_table', 'create_nicmos_table', 'create_table_from_table']
-__version__ = '0.5'
-__vdate__ = '05-Nov-2013'
+__version__ = '0.5.1'
+__vdate__ = '02-Aug-2016'
 
 
 def compute_values(obsmode, component_dict):
@@ -55,6 +48,8 @@ def compute_values(obsmode, component_dict):
         Dictionary with photometry keywords as keys.
 
     """
+    import pysynphot as S
+
     # Define the bandpass for this obsmode
     bp = S.ObsBandpass(obsmode, component_dict=component_dict)
 
@@ -260,6 +255,9 @@ def make_pri_hdu(filename, numpars, instrument, detector, pedigree, useafter):
         Useafter date in the format of ``MMM DD YYYY HH:MM:SS``.
 
     """
+    import pysynphot as S
+    from pysynphot import refs
+
     d = refs.getref()
     phdu = fits.PrimaryHDU()
 
@@ -358,6 +356,9 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
 
 
     """
+    import pysynphot as S
+    from pysynphot import refs
+
     if not output.endswith('_imp.fits'):
         output = output + '_imp.fits'
 
