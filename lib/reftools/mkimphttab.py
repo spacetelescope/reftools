@@ -731,21 +731,21 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     phdu = make_pri_hdu(output, max_npars, basemode.split(',')[0], detector,
                         ped_vals[0], useafter)
 
-    flam_tab = fits.new_table(
+    flam_tab = fits.BinTableHDU.from_columns(
         [obsmode_col, datacol_col['PHOTFLAM']] + flam_tabcols +
         parnames_tabcols + parvals_tabcols + nelem_tabcols +
         [pedigree_col, descrip_col])
     flam_tab.header['EXTNAME'] = ('PHOTFLAM', 'Extension name')
     flam_tab.header['EXTVER'] = (1, 'Extension number')
 
-    plam_tab = fits.new_table(
+    plam_tab = fits.BinTableHDU.from_columns(
         [obsmode_col, datacol_col['PHOTPLAM']] + plam_tabcols +
         parnames_tabcols + parvals_tabcols + nelem_tabcols +
         [pedigree_col, descrip_col])
     plam_tab.header['EXTNAME'] = ('PHOTPLAM', 'Extension name')
     plam_tab.header['EXTVER'] = (1, 'Extension number')
 
-    bw_tab = fits.new_table(
+    bw_tab = fits.BinTableHDU.from_columns(
         [obsmode_col, datacol_col['PHOTBW']] + bw_tabcols +
         parnames_tabcols + parvals_tabcols + nelem_tabcols +
         [pedigree_col, descrip_col])
