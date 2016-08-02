@@ -1,6 +1,9 @@
+from __future__ import absolute_import
+
 from unittest import TestCase
 
-from reftools import imphtcomp
+from .. import imphtcomp
+
 
 # test that all comparisons come up zero when comparing a file to itself
 class TestSameFile(TestCase):
