@@ -1,7 +1,14 @@
 #! /usr/bin/env python
 """tdspysyn - convert a COS or STIS TDS file to pysynphot throughput files"""
-
 from __future__ import absolute_import, division, print_function
+
+import getopt
+import math
+import os
+import sys
+
+import numpy as np
+from astropy.io import fits as pyfits
 
 __author__ = "Phil Hodge, STScI, February 2011."
 __usage__ = """
@@ -29,14 +36,6 @@ __taskname__ = "tdspysyn"
 __version__ = "0.1"
 __vdate__ = "2011 Feb 18"
 
-import getopt
-import math
-import os
-import sys
-
-import numpy as np
-from astropy.io import fits as pyfits
-
 DAYS_PER_YEAR = 365.25
 
 
@@ -44,14 +43,14 @@ def main():
     """Convert a TDS table to pysynphot format."""
 
     try:
-        (options, pargs) = getopt.getopt (sys.argv[1:], "h", ["help"])
+        (options, pargs) = getopt.getopt(sys.argv[1:], "h", ["help"])
     except Exception as error:
-        print (str(error))
+        print(str(error))
         prtOptions()
         return
 
     help = False
-    for i in range (len (options)):
+    for i in range(len(options)):
         if options[i][0] == "-h":
             help = True
         elif options[i][0] == "--help":
@@ -64,7 +63,7 @@ def main():
         # print("\t", __version__ + " (" + __vdate__ + ")")
         return
 
-    nargs = len (pargs)
+    nargs = len(pargs)
     if nargs < 6 or nargs > 8:
         prtOptions()
         return
@@ -75,15 +74,16 @@ def main():
         if pargs[6].lower() == "none":
             last_mjd = None
         else:
-            last_mjd = float (pargs[6])
+            last_mjd = float(pargs[6])
     if nargs == 8:
         if pargs[7].lower() == "none":
             row = None
         else:
-            row = int (pargs[7])
+            row = int(pargs[7])
 
-    tdsToPysynphot (pargs[0], pargs[1], float (pargs[2]), float (pargs[3]),
-                    float (pargs[4]), float (pargs[5]), last_mjd, row)
+    tdsToPysynphot(pargs[0], pargs[1], float(pargs[2]), float(pargs[3]),
+                   float(pargs[4]), float(pargs[5]), last_mjd, row)
+
 
 def prtOptions():
     """Print a list of command-line options and arguments."""
@@ -100,8 +100,9 @@ def prtOptions():
     print("  last_mjd: last MJD (or 'none') [optional]")
     print("  row: one-indexed row number in TDS table (or 'none') [optional]")
 
-def tdsToPysynphot (input, outroot, min_wl, max_wl, dwl,
-                    thru_mjd, last_mjd=None, row=None):
+
+def tdsToPysynphot(input, outroot, min_wl, max_wl, dwl,
+                   thru_mjd, last_mjd=None, row=None):
     """Convert a TDS table to pysynphot format.
 
     Parameters
@@ -152,18 +153,19 @@ def tdsToPysynphot (input, outroot, min_wl, max_wl, dwl,
     # convert `row` to zero indexing
     row -= 1
 
-    tds = initTds (input, outroot, min_wl, max_wl, dwl,
-                   thru_mjd, last_mjd, row)
+    tds = initTds(input, outroot, min_wl, max_wl, dwl,
+                  thru_mjd, last_mjd, row)
 
     for row in tds.rowlist:
-        tds.makeFilename (row)
-        time = tds.getTimes (row)
-        wavelength = tds.getWavelengths (min_wl, max_wl, dwl)
-        hdu = tds.createTable (time, wavelength)
-        tds.assignThroughputs (hdu, time, row)
-        tds.createFile (hdu, row)
+        tds.makeFilename(row)
+        time = tds.getTimes(row)
+        wavelength = tds.getWavelengths(min_wl, max_wl, dwl)
+        hdu = tds.createTable(time, wavelength)
+        tds.assignThroughputs(hdu, time, row)
+        tds.createFile(hdu, row)
 
-def initTds (input, outroot, min_wl, max_wl, dwl, thru_mjd, last_mjd, row):
+
+def initTds(input, outroot, min_wl, max_wl, dwl, thru_mjd, last_mjd, row):
     """Create a ConvertTds object for either COS or STIS data.
 
     Parameters
@@ -201,32 +203,33 @@ def initTds (input, outroot, min_wl, max_wl, dwl, thru_mjd, last_mjd, row):
         if a pysynphot table for each TDS table row should be written.
     """
 
-    ifd = pyfits.open (expandFilename (input))
-    filetype = ifd[0].header.get ("filetype", "missing")
-    instrument = ifd[0].header.get ("instrume", "missing")
+    ifd = pyfits.open(expandFilename(input))
+    filetype = ifd[0].header.get("filetype", "missing")
+    instrument = ifd[0].header.get("instrume", "missing")
     if row is not None:
-        nrows = len (ifd[1].data)
+        nrows = len(ifd[1].data)
         if row < 0 or row >= nrows:
             ifd.close()
             raise RuntimeError("`row` is out of range; "
-                "there are %d rows in the TDS table" % nrows)
+                               "there are %d rows in the TDS table" % nrows)
     ifd.close()
     if filetype != "missing" and \
        filetype != "TIME DEPENDENT SENSITIVITY TABLE":
         print("Warning:  FILETYPE =", filetype)
 
     if instrument == "COS":
-        tds = CosTds (input, outroot, min_wl, max_wl, dwl,
-                      thru_mjd, last_mjd, row)
+        tds = CosTds(input, outroot, min_wl, max_wl, dwl,
+                     thru_mjd, last_mjd, row)
     elif instrument == "STIS":
-        tds = StisTds (input, outroot, min_wl, max_wl, dwl,
-                       thru_mjd, last_mjd, row)
+        tds = StisTds(input, outroot, min_wl, max_wl, dwl,
+                      thru_mjd, last_mjd, row)
     else:
         raise RuntimeError("INSTRUME is %s; must be COS or STIS" % instrument)
 
     return tds
 
-def expandFilename (filename):
+
+def expandFilename(filename):
     """Get the real file name.
 
     Parameters
@@ -245,7 +248,7 @@ def expandFilename (filename):
     count = 0
     MAX_COUNT = 100
     while not done:
-        temp = os.path.expandvars (fname)       # $stuff/file
+        temp = os.path.expandvars(fname)  # $stuff/file
         count += 1
         if temp == fname:
             done = True
@@ -254,14 +257,15 @@ def expandFilename (filename):
             break
     if not done:
         raise RuntimeError("%d iterations exceeded while expanding "
-                "variables in file name %s" % (MAX_COUNT, filename))
-    fname = os.path.abspath (fname)             # ../file
-    fname = os.path.expanduser (fname)          # ~/file
-    real_file_name = os.path.normpath (fname)   # remove redundant strings
+                           "variables in file name %s" % (MAX_COUNT, filename))
+    fname = os.path.abspath(fname)             # ../file
+    fname = os.path.expanduser(fname)          # ~/file
+    real_file_name = os.path.normpath(fname)   # remove redundant strings
 
     return real_file_name
 
-def toMjd (year, month, day):
+
+def toMjd(year, month, day):
     """Convert calendar date (UTC) to Modified Julian Date.
 
     This is based on expression 12.92-1 in the Explanatory Supplement
@@ -292,22 +296,23 @@ def toMjd (year, month, day):
     # the expression was rewritten as follows.
     a = (month + 9) // 12 - 1
 
-    imjd = (1461 * (year + 4800 + a)) // 4 \
-            + (367 * (month - 2 - 12 * a)) // 12 \
-            - (3 * ((year + 4900 + a) // 100)) // 4
-    mjd = float (imjd) - 2432076. + day
+    imjd = ((1461 * (year + 4800 + a)) // 4 +
+            (367 * (month - 2 - 12 * a)) // 12 -
+            (3 * ((year + 4900 + a) // 100)) // 4)
+    mjd = float(imjd) - 2432076. + day
 
     return mjd
 
-class ConvertTds (object):
 
-    def __init__ (self, input, outroot, min_wl, max_wl, dwl,
-                  thru_mjd, last_mjd, row):
+class ConvertTds(object):
 
-        self.input = expandFilename (input)
+    def __init__(self, input, outroot, min_wl, max_wl, dwl,
+                 thru_mjd, last_mjd, row):
+
+        self.input = expandFilename(input)
         self.data = None                # will be the input data block
         self.phdr_tds = None            # assigned below
-        self.outroot = expandFilename (outroot)
+        self.outroot = expandFilename(outroot)
         self.output = self.outroot      # constructed later from outroot, etc.
         self.orig_input = input         # save for a history record
         self.orig_outroot = outroot     # save for a history record
@@ -318,11 +323,11 @@ class ConvertTds (object):
         self.last_mjd = last_mjd        # may be None
         self.row = row                  # save for a history record
 
-        ifd = pyfits.open (self.input)
+        ifd = pyfits.open(self.input)
         self.phdr_tds = ifd[0].header.copy()
-        self.useafter = ifd[0].header.get ("useafter", "missing")
+        self.useafter = ifd[0].header.get("useafter", "missing")
         self.useafter_mjd = self.useafterMjd()
-        self.ref_time = ifd[1].header.get ("ref_time", "missing")
+        self.ref_time = ifd[1].header.get("ref_time", "missing")
         self.data = ifd[1].data.copy()
         if row is None:
             self.rowlist = list(range(len(self.data)))
@@ -330,10 +335,10 @@ class ConvertTds (object):
             self.rowlist = [row]
         ifd.close()
 
-    def makeFilename (self, row):
+    def makeFilename(self, row):
         pass                            # defined in a subclass
 
-    def getTimes (self, row):
+    def getTimes(self, row):
         """Create the array of times.
 
         Parameters
@@ -350,29 +355,29 @@ class ConvertTds (object):
             date, and duplicates will be removed.
         """
 
-        time_tds = self.data.field ("time")[row]
-        nt_tds = self.data.field ("nt")[row]            # from TDS table
+        time_tds = self.data.field("time")[row]
+        nt_tds = self.data.field("nt")[row]            # from TDS table
         # add one for the useafter date, and possibly add one for `last_mjd`
         if self.last_mjd is None:
             nt_pysyn = nt_tds + 1
         else:
             nt_pysyn = nt_tds + 2
-        time = np.zeros (nt_pysyn, dtype=np.float64)    # for pysynphot table
+        time = np.zeros(nt_pysyn, dtype=np.float64)    # for pysynphot table
 
         # note:  round the MJD values to the nearest integer
-        time[0] = round (self.useafter_mjd)
-        for i in range (nt_tds):
-            time[i+1] = round (time_tds[i])             # from TDS table
+        time[0] = round(self.useafter_mjd)
+        for i in range(nt_tds):
+            time[i+1] = round(time_tds[i])             # from TDS table
         if self.last_mjd is not None:
-            time[-1] = round (self.last_mjd)
+            time[-1] = round(self.last_mjd)
 
-        sorted_times = np.sort (time)
+        sorted_times = np.sort(time)
 
         # copy sorted, unique times back to `time`
         k = 0                                           # initial value
         time[k] = sorted_times[0]
         last_time = sorted_times[0]
-        for i in range (1, nt_pysyn):
+        for i in range(1, nt_pysyn):
             if sorted_times[i] > last_time:
                 k += 1
                 time[k] = sorted_times[i]
@@ -381,7 +386,7 @@ class ConvertTds (object):
 
         return time[0:nelem]
 
-    def getWavelengths (self, min_wl, max_wl, dwl):
+    def getWavelengths(self, min_wl, max_wl, dwl):
         """Create the array of wavelengths for the pysynphot table.
 
         Parameters
@@ -401,13 +406,13 @@ class ConvertTds (object):
             Array of wavelengths (float64).
         """
 
-        nwl = int (math.ceil ((max_wl - min_wl) / dwl)) + 1
-        wavelength = np.arange (nwl, dtype=np.float64)
+        nwl = int(math.ceil((max_wl - min_wl) / dwl)) + 1
+        wavelength = np.arange(nwl, dtype=np.float64)
         wavelength[:] = wavelength * dwl + min_wl
 
         return wavelength
 
-    def createTable (self, time, wavelength):
+    def createTable(self, time, wavelength):
         """Create the output bintable header/data unit.
 
         All the columns will be defined, and the values in `wavelength`
@@ -427,29 +432,29 @@ class ConvertTds (object):
             The header/data unit containing the table.
         """
 
-        nrows = len (wavelength)
+        nrows = len(wavelength)
         col = []
-        col.append (pyfits.Column (name="WAVELENGTH", format="1D",
-                                   unit="ANGSTROM", disp="G10.7"))
-        col.append (pyfits.Column (name="THROUGHPUT", format="1E",
-                                   unit="TRANSMISSION", disp="G15.7"))
-        col.append (pyfits.Column (name="ERROR", format="1E",
-                                   unit="TRANSMISSION", disp="G15.7"))
-        for i in range (len (time)):
+        col.append(pyfits.Column(name="WAVELENGTH", format="1D",
+                                 unit="ANGSTROM", disp="G10.7"))
+        col.append(pyfits.Column(name="THROUGHPUT", format="1E",
+                                 unit="TRANSMISSION", disp="G15.7"))
+        col.append(pyfits.Column(name="ERROR", format="1E",
+                                 unit="TRANSMISSION", disp="G15.7"))
+        for i in range(len(time)):
             colname = "MJD#%.1f" % time[i]
-            col.append (pyfits.Column (name=colname, format="1E",
-                                       unit="TRANSMISSION", disp="G15.7"))
-        cd = pyfits.ColDefs (col)
+            col.append(pyfits.Column(name=colname, format="1E",
+                                     unit="TRANSMISSION", disp="G15.7"))
+        cd = pyfits.ColDefs(col)
 
-        hdu = pyfits.new_table (cd, nrows=nrows)
-        hdu.header.update ("thru_mjd", self.thru_mjd,
-                           comment="Time (MJD) for THROUGHPUT column")
+        hdu = pyfits.BinTableHDU.from_columns(cd, nrows=nrows)
+        hdu.header.update("thru_mjd", self.thru_mjd,
+                          comment="Time (MJD) for THROUGHPUT column")
 
-        hdu.data.field ("wavelength")[:] = wavelength
+        hdu.data.field("wavelength")[:] = wavelength
 
         return hdu
 
-    def assignThroughputs (self, hdu, time, row):
+    def assignThroughputs(self, hdu, time, row):
         """Assign values to the throughput columns.
 
         The values in the throughput column for the useafter date will be
@@ -469,23 +474,23 @@ class ConvertTds (object):
             Current row number (zero indexed) in input TDS table.
         """
 
-        wavelength = hdu.data.field ("wavelength")      # pysynphot table
+        wavelength = hdu.data.field("wavelength")      # pysynphot table
 
         colname = "THROUGHPUT"
-        thru = hdu.data.field (colname)
-        thru[:] = self.interpTdsFactors (row, self.thru_mjd, wavelength)
+        thru = hdu.data.field(colname)
+        thru[:] = self.interpTdsFactors(row, self.thru_mjd, wavelength)
 
-        useafter_mjd = round (self.useafter_mjd)
-        for i in range (len (time)):
+        useafter_mjd = round(self.useafter_mjd)
+        for i in range(len(time)):
             colname = "MJD#%.1f" % time[i]
-            thru = hdu.data.field (colname)
-            if abs (time[i] - useafter_mjd) < 0.5:
+            thru = hdu.data.field(colname)
+            if abs(time[i] - useafter_mjd) < 0.5:
                 # Throughput values at USEAFTER date.
                 thru[:] = 1.
             else:
-                thru[:] = self.interpTdsFactors (row, time[i], wavelength)
+                thru[:] = self.interpTdsFactors(row, time[i], wavelength)
 
-    def createFile (self, hdu, row):
+    def createFile(self, hdu, row):
         """Create the pysynphot file.
 
         This creates a pyfits HDUList object using the primary header/data
@@ -502,8 +507,8 @@ class ConvertTds (object):
             used only for writing a history record in the output header.
         """
 
-        primary_hdu = pyfits.PrimaryHDU (header=self.phdr_tds)
-        ofd = pyfits.HDUList (primary_hdu)
+        primary_hdu = pyfits.PrimaryHDU(header=self.phdr_tds)
+        ofd = pyfits.HDUList(primary_hdu)
         phdr = ofd[0].header
         # these keywords may have been copied from the input TDS file
         del phdr["origin"]
@@ -518,27 +523,27 @@ class ConvertTds (object):
         del phdr["detector"]
         del phdr["comment"]
         del phdr["history"]
-        phdr.update ("filename", os.path.basename (self.output))
-        if len (self.orig_input) + len (self.orig_outroot) < 48:
-            phdr.add_history ("tdspysyn:  input = %s, outroot = %s" %
-                              (self.orig_input, self.orig_outroot))
+        phdr.update("filename", os.path.basename(self.output))
+        if len(self.orig_input) + len(self.orig_outroot) < 48:
+            phdr.add_history("tdspysyn:  input = %s, outroot = %s" %
+                             (self.orig_input, self.orig_outroot))
         else:
-            phdr.add_history ("tdspysyn:  input = %s" % self.orig_input)
-            phdr.add_history ("tdspysyn:  outroot = %s" % self.orig_outroot)
-        phdr.add_history ("tdspysyn:  min_wl = %.8g, max_wl = %.8g, "
-                          "dwl = %.5g" % (self.min_wl, self.max_wl, self.dwl))
+            phdr.add_history("tdspysyn:  input = %s" % self.orig_input)
+            phdr.add_history("tdspysyn:  outroot = %s" % self.orig_outroot)
+        phdr.add_history("tdspysyn:  min_wl = %.8g, max_wl = %.8g, "
+                         "dwl = %.5g" % (self.min_wl, self.max_wl, self.dwl))
         if self.last_mjd is None:
             last_mjd = "None"
         else:
-            last_mjd = str (self.last_mjd)
+            last_mjd = str(self.last_mjd)
         # convert the row number to one-indexed
-        phdr.add_history ("tdspysyn:  thru_mjd = %.10g, last_mjd = %s, "
-                          "row = %d" % (self.thru_mjd, last_mjd, row+1))
+        phdr.add_history("tdspysyn:  thru_mjd = %.10g, last_mjd = %s, "
+                         "row = %d" % (self.thru_mjd, last_mjd, row+1))
 
-        ofd.append (hdu)
-        ofd.writeto (self.output)
+        ofd.append(hdu)
+        ofd.writeto(self.output)
 
-    def useafterMjd (self):
+    def useafterMjd(self):
         """Get the USEAFTER date and convert it to MJD.
 
         Returns
@@ -549,72 +554,74 @@ class ConvertTds (object):
 
         if self.useafter == "missing":
             raise RuntimeError("Keyword USEAFTER is missing "
-                                "from the primary header.")
+                               "from the primary header.")
 
         # The format is expected to be 'month day year hh:mm:ss',
         # for example, "May 11 2009 00:00:00".
         words = self.useafter.split()
-        len_words = len (words)
+        len_words = len(words)
         if len_words < 3 or len_words > 6:
             raise RuntimeError("Can't interpret USEAFTER date '%s'" %
-                                self.useafter)
-        if words[1].endswith (","):     # allow "May 11, 2009"
+                               self.useafter)
+        if words[1].endswith(","):     # allow "May 11, 2009"
             words[1] = words[1][:-1]
-        if words[2].endswith (","):     # allow "May 11 2009, 00:00:00"
+        if words[2].endswith(","):     # allow "May 11 2009, 00:00:00"
             words[2] = words[2][:-1]
         month_str = words[0][0:3].lower()
         months = ["jan", "feb", "mar", "apr", "may", "jun",
                   "jul", "aug", "sep", "oct", "nov", "dec"]
         if month_str not in months:
             raise RuntimeError(
-            "Don't understand the month in USEAFTER date '%s'" % self.useafter)
-        month = months.index (month_str) + 1    # one-indexed month
-        day = int (words[1])
-        year = int (words[2])
+                "Don't understand the month in USEAFTER date '%s'" %
+                self.useafter)
+        month = months.index(month_str) + 1    # one-indexed month
+        day = int(words[1])
+        year = int(words[2])
         if len_words == 4:
-            hms = words[3].split (":")
-            len_hms = len (hms)
+            hms = words[3].split(":")
+            len_hms = len(hms)
             if len_hms < 1 or len_hms > 3:
                 raise RuntimeError("Can't interpret USEAFTER date '%s'" %
-                                    self.useafter)
+                                   self.useafter)
             if len_hms == 1:
-                fraction = float (hms[0]) / 24.
+                fraction = float(hms[0]) / 24.
             elif len_hms == 2:
-                fraction = (float (hms[0]) + float (hms[1]) / 60.) / 24.
+                fraction = (float(hms[0]) + float(hms[1]) / 60.) / 24.
             elif len_hms == 3:
-                fraction = (float (hms[0]) + \
-                            (float (hms[1]) + \
-                             float (hms[2]) / 60.) / 60.) / 24.
+                fraction = ((float(hms[0]) +
+                            (float(hms[1]) +
+                             float(hms[2]) / 60.) / 60.) / 24.)
         elif len_words == 5:
-            hours = float (words[3])
-            minutes = float (words[4])
+            hours = float(words[3])
+            minutes = float(words[4])
             fraction = (hours + minutes / 60.) / 24.
         elif len_words == 6:
-            hours = float (words[3])
-            minutes = float (words[4])
-            seconds = float (words[5])
+            hours = float(words[3])
+            minutes = float(words[4])
+            seconds = float(words[5])
             fraction = (hours + (minutes + seconds / 60.) / 60.) / 24.
         else:
             fraction = 0.
 
-        day = float (day) + fraction
-        useafter_mjd = toMjd (year, month, day)
+        day = float(day) + fraction
+        useafter_mjd = toMjd(year, month, day)
 
         return useafter_mjd
 
-class CosTds (ConvertTds):
 
-    def __init__ (self, input, outroot, min_wl, max_wl, dwl,
-                  thru_mjd, last_mjd, row):
+class CosTds(ConvertTds):
 
-        ConvertTds.__init__ (self, input, outroot, min_wl, max_wl, dwl,
-                             thru_mjd, last_mjd, row)
+    def __init__(self, input, outroot, min_wl, max_wl, dwl,
+                 thru_mjd, last_mjd, row):
+
+        ConvertTds.__init__(self, input, outroot, min_wl, max_wl, dwl,
+                            thru_mjd, last_mjd, row)
 
         if self.ref_time == "missing":
             raise RuntimeError("Keyword REF_TIME is missing "
-                                "from the table header.")
+                               "from the table header.")
 
-    def makeFilename (self, row):
+    def makeFilename(self, row):
         """Create a name for the output COS pysynphot file.
 
         The file name will be the root that was specified by the user,
@@ -628,14 +635,14 @@ class CosTds (ConvertTds):
             Zero-indexed row number in the input TDS table.
         """
 
-        opt_elem = self.data.field ("opt_elem")[row].lower()
-        segment = self.data.field ("segment")[row].lower()
-        aperture = self.data.field ("aperture")[row].lower()
+        opt_elem = self.data.field("opt_elem")[row].lower()
+        segment = self.data.field("segment")[row].lower()
+        aperture = self.data.field("aperture")[row].lower()
 
-        self.output = self.outroot + "_%s_%s_%s.fits" % \
-                        (opt_elem, segment, aperture)
+        self.output = self.outroot + ("_%s_%s_%s.fits" %
+                                      (opt_elem, segment, aperture))
 
-    def interpTdsFactors (self, row, mjd, wavelength):
+    def interpTdsFactors(self, row, mjd, wavelength):
         """Read and interpret the specified row of the input COS TDS table.
 
         Parameters
@@ -658,25 +665,25 @@ class CosTds (ConvertTds):
         """
         from calcos import ccos
 
-        nwl = self.data.field ("nwl")[row]
-        nt = self.data.field ("nt")[row]
-        wl_tds = self.data.field ("wavelength")[row]    # 1-D array
-        time_tds = self.data.field ("time")[row]        # 1-D array
+        nwl = self.data.field("nwl")[row]
+        nt = self.data.field("nt")[row]
+        wl_tds = self.data.field("wavelength")[row]    # 1-D array
+        time_tds = self.data.field("time")[row]        # 1-D array
         # slope_pct is percent per year
-        slope_pct = self.data.field ("slope")[row]      # 2-D array
-        intercept = self.data.field ("intercept")[row]  # 2-D array
+        slope_pct = self.data.field("slope")[row]      # 2-D array
+        intercept = self.data.field("intercept")[row]  # 2-D array
 
         # This section is needed because pyfits currently ignores TDIMi.
-        maxt = len (time_tds)
-        maxwl = len (wl_tds)
-        slope_pct = np.reshape (slope_pct, (maxt, maxwl))
-        intercept = np.reshape (intercept, (maxt, maxwl))
+        maxt = len(time_tds)
+        maxwl = len(wl_tds)
+        slope_pct = np.reshape(slope_pct, (maxt, maxwl))
+        intercept = np.reshape(intercept, (maxt, maxwl))
 
         # Find the time interval that includes the time of observation.
         if nt == 1 or mjd >= time_tds[nt-1]:
             i = nt - 1
         else:
-            for i in range (nt-1):
+            for i in range(nt-1):
                 if mjd < time_tds[i+1]:
                     break
 
@@ -700,22 +707,23 @@ class CosTds (ConvertTds):
         # set of wavelengths that have been specified.
         wl_tds = wl_tds[0:nwl]
         factor_tds = delta_t * slope[i][0:nwl] + intercept[i][0:nwl]
-        factor = np.zeros (len (wavelength), dtype=np.float64)
+        factor = np.zeros(len(wavelength), dtype=np.float64)
 
         # Interpolate factor_tds at each wavelength.
-        ccos.interp1d (wl_tds, factor_tds, wavelength, factor)
+        ccos.interp1d(wl_tds, factor_tds, wavelength, factor)
 
         return factor
 
-class StisTds (ConvertTds):
 
-    def __init__ (self, input, outroot, min_wl, max_wl, dwl,
-                  thru_mjd, last_mjd, row):
+class StisTds(ConvertTds):
 
-        ConvertTds.__init__ (self, input, outroot, min_wl, max_wl, dwl,
-                             thru_mjd, last_mjd, row)
+    def __init__(self, input, outroot, min_wl, max_wl, dwl,
+                 thru_mjd, last_mjd, row):
 
-    def makeFilename (self, row):
+        ConvertTds.__init__(self, input, outroot, min_wl, max_wl, dwl,
+                            thru_mjd, last_mjd, row)
+
+    def makeFilename(self, row):
         """Create a name for the output STIS pysynphot file.
 
         The file name will be the root that was specified by the user, then
@@ -728,11 +736,11 @@ class StisTds (ConvertTds):
             Zero-indexed row number in the input TDS table.
         """
 
-        opt_elem = self.data.field ("opt_elem")[row].lower()
+        opt_elem = self.data.field("opt_elem")[row].lower()
 
         self.output = self.outroot + "_%s.fits" % opt_elem
 
-    def interpTdsFactors (self, row, mjd, wavelength):
+    def interpTdsFactors(self, row, mjd, wavelength):
         """Read and interpret the specified row of the input STIS TDS table.
 
         Parameters
@@ -755,61 +763,66 @@ class StisTds (ConvertTds):
         """
         from calcos import ccos
 
-        nwl = self.data.field ("nwl")[row]
-        nt = self.data.field ("nt")[row]
-        wl_tds = self.data.field ("wavelength")[row]    # 1-D array
-        time_tds = self.data.field ("time")[row]        # 1-D array
+        nwl = self.data.field("nwl")[row]
+        nt = self.data.field("nt")[row]
+        wl_tds = self.data.field("wavelength")[row]    # 1-D array
+        time_tds = self.data.field("time")[row]        # 1-D array
         # slope_pct is percent per year
-        slope_pct = self.data.field ("slope")[row]      # 2-D array
+        slope_pct = self.data.field("slope")[row]      # 2-D array
 
         # This section is needed because pyfits currently ignores TDIMi.
-        maxt = len (time_tds)
-        maxwl = len (wl_tds)
-        slope_pct = np.reshape (slope_pct, (maxt, maxwl))
+        maxt = len(time_tds)
+        maxwl = len(wl_tds)
+        slope_pct = np.reshape(slope_pct, (maxt, maxwl))
 
         # Convert the slope from percent to a fraction,
         # and convert from per year to per day.
         slope = slope_pct / (DAYS_PER_YEAR * 100.)
 
-        factor_tds = np.ones (nwl, dtype=np.float64)
-        for i in range (nwl):
-            for j in range (nt):
+        factor_tds = np.ones(nwl, dtype=np.float64)
+        for i in range(nwl):
+            for j in range(nt):
                 if j == nt-1 or mjd <= time_tds[j+1]:
-                    factor_tds[i] += (mjd - time_tds[j]) * slope[j,i]
+                    factor_tds[i] += (mjd - time_tds[j]) * slope[j, i]
                     break
                 else:
-                    factor_tds[i] += (time_tds[j+1] - time_tds[j]) * slope[j,i]
+                    factor_tds[i] += ((time_tds[j + 1] - time_tds[j]) *
+                                      slope[j, i])
 
         # Take the slice [0:nwl] to avoid using elements that may not be valid,
         # and because the array of factors should be the same length as the
         # set of wavelengths that have been specified.
         wl_tds = wl_tds[0:nwl]
-        factor = np.zeros (len (wavelength), dtype=np.float64)
+        factor = np.zeros(len(wavelength), dtype=np.float64)
 
         # Interpolate factor_tds at each wavelength.
-        ccos.interp1d (wl_tds, factor_tds, wavelength, factor)
+        ccos.interp1d(wl_tds, factor_tds, wavelength, factor)
 
         return factor
 
+
 #
-#### Interfaces used by TEAL
+# Interfaces used by TEAL
 #
 def run(configobj=None):
     """TEAL interface for running this code."""
-    ### version 2011 Feb 18
+    # version 2011 Feb 18
 
-    tdsToPysynphot (configobj["input"], configobj["outroot"],
-                    max_wl=configobj["max_wl"],
-                    min_wl=configobj["min_wl"],
-                    dwl=configobj["dwl"],
-                    thru_mjd=configobj["thru_mjd"],
-                    last_mjd=configobj["last_mjd"],
-                    row=configobj["row"])
+    tdsToPysynphot(configobj["input"], configobj["outroot"],
+                   max_wl=configobj["max_wl"],
+                   min_wl=configobj["min_wl"],
+                   dwl=configobj["dwl"],
+                   thru_mjd=configobj["thru_mjd"],
+                   last_mjd=configobj["last_mjd"],
+                   row=configobj["row"])
 
 
 def getHelpAsString(fulldoc=True):
     """Return help info from <module>.help in the script directory"""
-    from stsci.tools import teal
+    try:
+        from stsci.tools import teal
+    except ImportError:
+        teal = None
 
     if fulldoc:
         basedoc = __doc__
@@ -818,7 +831,8 @@ def getHelpAsString(fulldoc=True):
     helpString = basedoc + "\n"
     helpString += "Version " + __version__ + "\n"
 
-    helpString += teal.getHelpFileAsString(__taskname__, __file__)
+    if teal is not None:
+        helpString += teal.getHelpFileAsString(__taskname__, __file__)
 
     helpString += __usage__
 
