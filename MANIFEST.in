@@ -5,6 +5,8 @@ include RELIC-INFO
 
 recursive-include doc *
 
+include reftools/*.so
+
 prune build
 prune doc/build
 
