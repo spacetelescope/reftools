@@ -211,7 +211,7 @@ class _Text2Fits(object):
         c0 = fits.Column(name=colName[0], format=colForm[0], array=colData[0])
         c1 = fits.Column(name=colName[1], format=colForm[1], unit=colUnit[1], array=colData[1])
 
-        self.dtde = fits.new_table(fits.ColDefs([c0, c1]))
+        self.dtde = fits.BinTableHDU.from_columns(fits.ColDefs([c0, c1]))
         self.dtde.header['EXTNAME'] = 'DTDE'
         self.dtde.header['DATAFILE'] = (os.path.basename(dtde_file), 'data source file')
 
@@ -291,7 +291,7 @@ class _Text2Fits(object):
         # Write to FITS table extension
         tabData = [fits.Column(name=colName[i], format=colForm[i], unit=colUnit[i], array=colData[i]) for i in colRange]
 
-        self.charge_leak.append(fits.new_table(fits.ColDefs(tabData)))
+        self.charge_leak.append(fits.BinTableHDU.from_columns(fits.ColDefs(tabData)))
         self.charge_leak[-1].header['EXTNAME'] = 'CHG_LEAK{0:d}'.format(num)
         self.charge_leak[-1].header['MJD1'] = (mjd1, 'start valid time range for data')
         self.charge_leak[-1].header['MJD2'] = (mjd2, 'end valid time range for data')
@@ -341,7 +341,7 @@ class _Text2Fits(object):
 
         c1 = fits.Column(name=colName, format=colForm, array=colData)
 
-        self.levels = fits.new_table(fits.ColDefs([c1]))
+        self.levels = fits.BinTableHDU.from_columns(fits.ColDefs([c1]))
         self.levels.header['EXTNAME'] = 'LEVELS'
         self.levels.header['DATAFILE'] = (os.path.basename(levels_file), 'data source file')
 
@@ -400,7 +400,7 @@ class _Text2Fits(object):
         c0 = fits.Column(name=colName[0], format=colForm[0], unit=colUnit[0], array=colData[0])
         c1 = fits.Column(name=colName[1], format=colForm[1], unit=colUnit[1], array=colData[1])
 
-        self.scale = fits.new_table(fits.ColDefs([c0,c1]))
+        self.scale = fits.BinTableHDU.from_columns(fits.ColDefs([c0,c1]))
         self.scale.header['EXTNAME'] = 'CTE_SCALE'
         self.scale.header['DATAFILE'] = (os.path.basename(scale_file), 'data source file')
 
@@ -474,7 +474,7 @@ class _Text2Fits(object):
         c3 = fits.Column(name=colName[3], format=colForm[3], unit=colUnit[3], array=colData[3])
         c4 = fits.Column(name=colName[4], format=colForm[4], unit=colUnit[4], array=colData[4])
 
-        self.col_scale = fits.new_table(fits.ColDefs([c0,c1,c2,c3,c4]))
+        self.col_scale = fits.BinTableHDU.from_columns(fits.ColDefs([c0,c1,c2,c3,c4]))
         self.col_scale.header['EXTNAME'] = 'COL_SCALE'
         self.col_scale.header['DATAFILE'] = (os.path.basename(column_file), 'data source file')
 
