@@ -2,12 +2,13 @@ include README.rst
 include LICENSE.txt
 
 include RELIC-INFO
+exclude reftools/version.py
 
 recursive-include doc *
-
-include reftools/*.so
+recursive-include reftools/src *.c *.h
 
 prune build
 prune doc/build
 
+global-exclude reftools/*.so
 global-exclude *.pyc *.o
