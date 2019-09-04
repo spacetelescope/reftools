@@ -34,8 +34,10 @@ from . import _computephotpars
 __version__ = '0.1.2'
 __vdate__ = '15-Apr-2014'
 
+__all__ = ['ImphttabError', 'get_phot_pars', 'GetPhotPars']
 
-class ImphttabError(StandardError):
+
+class ImphttabError(Exception):
   """
   Class for errors associated with the imphttab file.
 
