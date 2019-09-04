@@ -11,9 +11,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import os
-import sys
-
 # For reftools version
 import reftools
 
@@ -50,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'reftools'
-copyright = u'2016, STScI'
+copyright = u'2019, STScI'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
