@@ -82,8 +82,8 @@ def compute_synphot_values(obsmode):
     from pyraf import iraf  # noqa
     from iraf import stsdas, hst_calib, synphot  # noqa
 
-    synphot.bandpar(obsmode, output='temp.fits', Stdout=1)
     tmpfits = os.path.join(tempfile.gettempdir(), 'temp.fits')
+    synphot.bandpar(obsmode, output=tmpfits, Stdout=1)
 
     with fits.open(tmpfits) as f:
         d = f[1].data
