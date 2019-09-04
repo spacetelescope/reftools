@@ -47,7 +47,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=[
-        'astropy>=1.1',
+        'astropy>=2',
         'numpy'
     ],
     tests_require=['nose'],

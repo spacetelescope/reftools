@@ -3,7 +3,6 @@ from __future__ import absolute_import, print_function, division
 
 # STDLIB
 import os
-import re
 import sys
 import tempfile
 import time as _time
@@ -80,11 +79,11 @@ def compute_synphot_values(obsmode):
         Dictionary with photometry keywords as keys.
 
     """
-    from pyraf import iraf
-    from iraf import stsdas, hst_calib, synphot
+    from pyraf import iraf  # noqa
+    from iraf import stsdas, hst_calib, synphot  # noqa
 
-    synphot.bandpar(obsmode, output=tmpfits, Stdout=1)
     tmpfits = os.path.join(tempfile.gettempdir(), 'temp.fits')
+    synphot.bandpar(obsmode, output=tmpfits, Stdout=1)
 
     with fits.open(tmpfits) as f:
         d = f[1].data
@@ -123,7 +122,7 @@ def expand_obsmodes(basemode, pardict):
 
     """
     basemode = basemode.lower()
-    obsmode_str = '%s,%s#%0.4f'
+    # obsmode_str = '%s,%s#%0.4f'
     olist = list()
 
     if len(pardict) > 0:
@@ -757,7 +756,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     ftab.append(flam_tab)
     ftab.append(plam_tab)
     ftab.append(bw_tab)
-    ftab.writeto(output, clobber=clobber)
+    ftab.writeto(output, overwrite=clobber)
 
 
 def create_nicmos_table(output, detector, useafter, pht_table, **kwargs):
