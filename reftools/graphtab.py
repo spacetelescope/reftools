@@ -7,9 +7,7 @@ supported by the table.
 from __future__ import absolute_import, print_function, division
 
 # STDLIB
-import os
 import sys
-from collections import defaultdict
 
 # ASTROPY
 from astropy import log
@@ -154,7 +152,7 @@ class Node(object):
         if sys.version_info[0] < 3:
             iterator = self.edges.values().__iter__()
         else:
-            iterator = self.edges.values()
+            iterator = iter(self.edges.values())
         return iterator
 
     def __str__(self):
