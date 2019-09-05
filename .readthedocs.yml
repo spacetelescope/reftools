@@ -2,11 +2,10 @@
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 version: 2
 
-# TODO: Enable fail on warning in the future
 sphinx:
   builder: html
   configuration: doc/source/conf.py
-  fail_on_warning: false
+  fail_on_warning: true
 
 # Set the version of Python and requirements required to build your docs
 python:
