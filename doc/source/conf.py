@@ -183,8 +183,8 @@ htmlhelp_basename = 'reftoolsdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'reftools.tex', u'reftools Documentation',
-   u'STScI', 'manual'),
+    ('index', 'reftools.tex', u'reftools Documentation',
+     u'STScI', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -228,5 +228,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('https://matplotlib.org/', None),
     'astropy': ('https://docs.astropy.org/en/stable/', None),
-    'pysynphot': ('https://pysynphot.readthedocs.io/en/stable/', None)
-    }
+    'pysynphot': ('https://pysynphot.readthedocs.io/en/stable/', None),
+    'synphot': ('https://synphot.readthedocs.io/en/stable/', None),
+    'stsynphot': ('https://stsynphot.readthedocs.io/en/stable/', None)
+}

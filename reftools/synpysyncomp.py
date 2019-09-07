@@ -1,5 +1,5 @@
 """
-Tools for comparing pysynphot and synphot photometry calculations.
+Tools for comparing pysynphot and IRAF synphot photometry calculations.
 
 """
 from __future__ import absolute_import, division, print_function

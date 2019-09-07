@@ -16,6 +16,8 @@ from astropy import log
 # LOCAL
 from .graphtab import Graph, Node, Edge
 
+USE_PYSYNPHOT = os.environ.get('MKIMPHTTAB_USE_PYSYNPHOT', '0') == '1'
+
 __all__ = ['read_graphtable']
 
 # search for string embedded in parentheses
@@ -30,114 +32,113 @@ def read_graphtable(fname, tmcfile=None, tmtfile=None, offset=0, verbose=False):
     at which you want the resulting Graph to start.
 
     """
-    # PYSYNPHOT
-    from pysynphot import locations
-    from pysynphot.locations import irafconvert
+    if USE_PYSYNPHOT:
+        from pysynphot.locations import irafconvert
+    else:
+        from stsynphot.stio import irafconvert
 
     fname = irafconvert(fname)
     if tmcfile is not None:
         tmcfile = irafconvert(tmcfile)
     else:
         # try to get definition from header of graphtab itself
-        tmcfile = irafconvert(fits.getval(fname,'tmcfile'))
+        tmcfile = irafconvert(fits.getval(fname, 'tmcfile'))
         if tmcfile is None:
             raise ValueError('No valid TMCFILE provided as input...')
     if tmtfile is not None:
         tmtfile = irafconvert(tmtfile)
     else:
-        tmtfile = irafconvert(fits.getval(fname,'tmtfile'))
+        tmtfile = irafconvert(fits.getval(fname, 'tmtfile'))
         if tmtfile is None:
             raise ValueError('No valid TMTFILE provided as input...')
 
-    #TODO: FITS vs ascii
-    f = fits.open(fname)
-    incol = f[1].data.field('innode') # get the innode column here
-    d = f[1].data[incol >= offset] # only grab desired rows based on `offset`
+    # TODO: FITS vs ascii
+    with fits.open(fname) as f:
+        incol = f[1].data.field('innode')  # get the innode column here
+        d = f[1].data[incol >= offset]  # only grab desired rows based on `offset`
 
-    log.info('\nTMCFILE: {0}   TMTFILE: {1}\n'.format(tmcfile, tmtfile))
+        log.info('\nTMCFILE: {0}   TMTFILE: {1}\n'.format(tmcfile, tmtfile))
 
-    # Preload empty nodes into the table, to simplify
-    # what follows.
-    # Preserve numerical order because of worries about "top"
-    # in the recursive calls.
-    numlist = list(set(d.field('innode'))) # make a list of node numbers for selected rows
-    numlist.sort()
-    nodelist = list()
-    for num in numlist:
-        nodelist.append(Node(num))
-    del numlist
+        # Preload empty nodes into the table, to simplify
+        # what follows.
+        # Preserve numerical order because of worries about "top"
+        # in the recursive calls.
+        numlist = list(set(d.field('innode')))  # make a list of node numbers for selected rows
+        numlist.sort()
+        nodelist = list()
+        for num in numlist:
+            nodelist.append(Node(num))
+        del numlist
 
-    ans = Graph(nodelist)
-    del nodelist
+        ans = Graph(nodelist)
+        del nodelist
 
-    # Add some metadata
-    ans.name = fname
-    ans.tmcfiles.append(tmcfile)
-    ans.tmtfiles.append(tmtfile)
-    ans.area = f[0].header.get('effarea')    # in sq. cm.
-    #fill the lookup
-    ans.lookup = make_lookup(ans.tmcfiles + ans.tmtfiles)
+        # Add some metadata
+        ans.name = fname
+        ans.tmcfiles.append(tmcfile)
+        ans.tmtfiles.append(tmtfile)
+        ans.area = f[0].header.get('effarea')    # in sq. cm.
+        # fill the lookup
+        ans.lookup = make_lookup(ans.tmcfiles + ans.tmtfiles)
 
-    # Process each row of the table
-    for row in d:
-        # Get the innode
-        innum = row.field('innode')
-        node = ans.get(innum)
+        # Process each row of the table
+        for row in d:
+            # Get the innode
+            innum = row.field('innode')
+            node = ans.get(innum)
 
-        if row.field('compname').endswith('_graph'):
-            #Then we have to jump to another graph table.
-            try:
-                subgraph = read_graphtable(row.field('compname'),
-                                           offset=row.field('outnode'))
-                outnode = subgraph.top
-                ans.tmcfiles.extend(subgraph.tmcfiles)
-                ans.tmtfiles.extend(subgraph.tmtfiles)
-                check_area(ans, subgraph)
-            except IOError as e:
-                log.warn("{0}: skipping".format(str(e)))
-                outnode = None
+            if row.field('compname').endswith('_graph'):
+                # Then we have to jump to another graph table.
+                try:
+                    subgraph = read_graphtable(row.field('compname'),
+                                               offset=row.field('outnode'))
+                    outnode = subgraph.top
+                    ans.tmcfiles.extend(subgraph.tmcfiles)
+                    ans.tmtfiles.extend(subgraph.tmtfiles)
+                    check_area(ans, subgraph)
+                except IOError as e:
+                    log.warn("{0}: skipping".format(str(e)))
+                    outnode = None
 
-        else:
-            # Get the outnode
-            outnum = row.field('outnode')
-            if outnum in ans:
-                outnode = ans[outnum]
             else:
-                outnode = None
+                # Get the outnode
+                outnum = row.field('outnode')
+                if outnum in ans:
+                    outnode = ans[outnum]
+                else:
+                    outnode = None
 
-        # If tmcfile has been defined, extract the throughput filename
-        # for the component as well
-        compkey = make_key(tmcfile,row.field('compname'))
-        cname = ''
-        parvar = ''
-        if compkey in ans.lookup and compkey is not None:
-            try:
-                cname = irafconvert(ans.lookup[compkey])
-            except KeyError:
-                # No environment variable defined for this component, so do not
-                # try to read that component file
-                cname = ans.lookup[compkey]
-                if verbose:
-                    log.warn('environment variable not defined for '
-                             '{0}'.format(cname))
-            # extract the parameterized variable name from the compname
-            varname = __re_compvar_match.findall(cname)
-            if len(varname) > 0:
-                parvar = varname[0].upper()
-                cname = cname[:cname.find('[')]
+            # If tmcfile has been defined, extract the throughput filename
+            # for the component as well
+            compkey = make_key(tmcfile, row.field('compname'))
+            cname = ''
+            parvar = ''
+            if compkey in ans.lookup and compkey is not None:
+                try:
+                    cname = irafconvert(ans.lookup[compkey])
+                except KeyError:
+                    # No environment variable defined for this component, so do not
+                    # try to read that component file
+                    cname = ans.lookup[compkey]
+                    if verbose:
+                        log.warn('environment variable not defined for '
+                                 '{0}'.format(cname))
+                # extract the parameterized variable name from the compname
+                varname = __re_compvar_match.findall(cname)
+                if len(varname) > 0:
+                    parvar = varname[0].upper()
+                    cname = cname[:cname.find('[')]
 
-        # Make the edge that corresponds to this row.
-        # Compnames are qualified by their lookup table names.
-        edge = Edge(row.field('keyword'),
-                    [compkey,
-                     make_key(tmtfile,row.field('thcompname')),
-                    cname,parvar],
-                    outnode)
+            # Make the edge that corresponds to this row.
+            # Compnames are qualified by their lookup table names.
+            edge = Edge(row.field('keyword'),
+                        [compkey,
+                         make_key(tmtfile, row.field('thcompname')),
+                         cname, parvar],
+                        outnode)
 
-        # and hook it up to the innode
-        node.add_edge(edge)
-
-    f.close()
+            # and hook it up to the innode
+            node.add_edge(edge)
 
     return ans
 
@@ -208,10 +209,10 @@ def make_lookup(inlist):
 
         # Add items to the dictionary
         for (key, val) in zip(compname, filename):
-            decorated_key = ".".join([base,key])
+            decorated_key = ".".join([base, key])
             lookup[decorated_key] = val
 
-    if len(lookup) == 1: #we put None in, remember
+    if len(lookup) == 1:  # we put None in, remember
         log.warn('Warning, no lookup tables found. They must be filled by '
                  'hand.')
 

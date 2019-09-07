@@ -1,4 +1,10 @@
-"""Use this module to create an IMPHTTAB for an instrument."""
+"""Use this module to create an IMPHTTAB for an instrument.
+
+Set the ``MKIMPHTTAB_USE_PYSYNPHOT`` environment variable to 1
+to use PySynphot. Otherwise, the functions in this module will
+use ``stsynphot`` (Python 3 only).
+
+"""
 from __future__ import absolute_import, print_function, division
 
 # STDLIB
@@ -18,8 +24,8 @@ from astropy.io import fits
 from . import graphfile as sgf
 
 __all__ = ['create_table', 'create_nicmos_table', 'create_table_from_table']
-__version__ = '0.5.1'
-__vdate__ = '02-Aug-2016'
+__version__ = '0.6'
+__vdate__ = '07-Sep-2019'
 
 
 def compute_values(obsmode, component_dict):
@@ -47,20 +53,34 @@ def compute_values(obsmode, component_dict):
         Dictionary with photometry keywords as keys.
 
     """
-    import pysynphot as S
+    if sgf.USE_PYSYNPHOT:
+        import pysynphot as S
 
-    # Define the bandpass for this obsmode
-    bp = S.ObsBandpass(obsmode, component_dict=component_dict)
+        # Define the bandpass for this obsmode
+        bp = S.ObsBandpass(obsmode, component_dict=component_dict)
 
-    # compute the photometric values
-    uresp = bp.unit_response()
+        # compute the photometric values
+        uresp = bp.unit_response()
+        pivot = bp.pivot()
+        photbw = bp.photbw()
+    else:
+        import stsynphot as stsyn
+
+        # Define the bandpass for this obsmode
+        bp = stsyn.band(obsmode, component_dict=component_dict)
+
+        # compute the photometric values
+        uresp = bp.unit_response(bp.area).value
+        pivot = bp.pivot().value
+        photbw = bp.photbw().value
+
     if not np.isfinite(uresp):
         uresp = 0.0
 
-    return {'PHOTFLAM': uresp, 'PHOTPLAM': bp.pivot(), 'PHOTBW': bp.photbw()}
+    return {'PHOTFLAM': uresp, 'PHOTPLAM': pivot, 'PHOTBW': photbw}
 
 
-def compute_synphot_values(obsmode):
+def compute_iraf_synphot_values(obsmode):
     """Calculate the same values as :func:`compute_values` but
     using IRAF SYNPHOT.
 
@@ -147,9 +167,9 @@ def expand_obsmodes(basemode, pardict):
             key = list(pardict.keys())[nkey]
             for val in pardict[key]:
                 pdict = {}
-                for k in list(pardict.keys())[nkey+1:]:
+                for k in list(pardict.keys())[nkey + 1:]:
                     pdict[k] = pardict[k]
-                ostr = basemode.replace(key.lower(), key.lower()+str(val))
+                ostr = basemode.replace(key.lower(), key.lower() + str(val))
                 olist.extend(expand_obsmodes(ostr, pdict))
 
     return olist
@@ -254,10 +274,18 @@ def make_pri_hdu(filename, numpars, instrument, detector, pedigree, useafter):
         Useafter date in the format of ``MMM DD YYYY HH:MM:SS``.
 
     """
-    import pysynphot as S
-    from pysynphot import refs
+    if sgf.USE_PYSYNPHOT:
+        import pysynphot as S
+        from pysynphot import refs
 
-    d = refs.getref()
+        synver = S.__version__
+        d = refs.getref()
+    else:
+        import stsynphot as stsyn
+
+        synver = stsyn.__version__
+        d = stsyn.getref()
+
     phdu = fits.PrimaryHDU()
 
     phdu.header['DATE'] = (get_date(), 'Date FITS file was generated')
@@ -271,7 +299,7 @@ def make_pri_hdu(filename, numpars, instrument, detector, pedigree, useafter):
     phdu.header['DBTABLE'] = ('IMPHTTAB', 'Database table')
     phdu.header['INSTRUME'] = (instrument, 'Instrument name')
     phdu.header['DETECTOR'] = (detector, 'Detector name')
-    phdu.header['SYNSWVER'] = (S.__version__,
+    phdu.header['SYNSWVER'] = (synver,
                                'Version of synthetic photometry software')
     phdu.header['MKTABVER'] = (__version__, 'Version of reftools.mkimphttab')
     phdu.header['GRAPHTAB'] = (os.path.basename(d['graphtable']),
@@ -353,10 +381,21 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     verbose : bool, optional
         Display extra information.
 
-
     """
-    import pysynphot as S
-    from pysynphot import refs
+    if sgf.USE_PYSYNPHOT:
+        import pysynphot as S
+        from pysynphot import refs
+
+        synname = 'pysynphot'
+        synver = S.__version__
+        d = refs.getref()
+    else:
+        import stsynphot as stsyn
+        from stsynphot import conf as stsyn_conf
+
+        synname = 'stsynphot'
+        synver = stsyn.__version__
+        d = stsyn.getref()
 
     if not output.endswith('_imp.fits'):
         output = output + '_imp.fits'
@@ -368,13 +407,19 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
 
     # Define graph and component tables.
     if tmgtab is None:
-        tmgtab = refs.GRAPHTABLE
+        tmgtab = d['graphtable']
     if tmctab is None:
-        tmctab = refs.COMPTABLE
+        tmctab = d['comptable']
     if tmttab is None:
-        tmttab = refs.THERMTABLE
+        tmttab = d['thermtable']
 
-    refs.setref(graphtable=tmgtab, comptable=tmctab, thermtable=tmttab)
+    if sgf.USE_PYSYNPHOT:
+        refs.setref(graphtable=tmgtab, comptable=tmctab, thermtable=tmttab)
+    else:
+        stsyn_conf.graphtable = tmgtab
+        stsyn_conf.comptable = tmctab
+        stsyn_conf.thermtable = tmttab
+
     x = sgf.read_graphtable(tmgtab, tmctab, tmttab)
 
     if len(mode_list) == 0:
@@ -407,7 +452,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         npars = len(fpars)
         npar_vals.append(npars)
         fpars_vals.append(fpars)
-        fpars_len = [len(f) for f in fpars]
+        fpars_len = list(map(len, fpars))
 
         if len(fpars_len) == 0:
             fpars_max = 0
@@ -572,7 +617,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
 
             if verbose:
                 log.info('\tPHOTFLAM({0}) = {1}'.format(
-                        fullmode, value['PHOTFLAM']))
+                    fullmode, value['PHOTFLAM']))
 
             pflam[n] = value['PHOTFLAM']
             pplam[n] = value['PHOTPLAM']
@@ -642,7 +687,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
             pvals.append(parvals_rows[row][col])
         parvals_cols.append(pvals)
 
-    for col in range(max_npars+1):
+    for col in range(max_npars + 1):
         fvals = list()
         plvals = list()
         bvals = list()
@@ -660,9 +705,9 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
 
     ped_vals = [fits.getval(tmctab, 'pedigree', 0)] * len(nmode_vals)
     descrip_str = (
-        'Generated {0} from {1}, mkimphttab version {2}, '
-        'pysynphot version {3}'.format(
-            get_date(), os.path.basename(tmgtab), __version__, S.__version__))
+        'Generated {} from {}, mkimphttab version {}, '
+        '{} version {}'.format(
+            get_date(), os.path.basename(tmgtab), __version__, synname, synver))
     descrip_vals = [descrip_str] * len(nmode_vals)
 
     # Finally, create structures needed to define this row in the FITS table
@@ -691,12 +736,12 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     # that range namely, the PAR<n>VALUES and NELEM<n> columns
     for p in range(max_npars):
         nelem_tabcols.append(fits.Column(
-            name="NELEM"+str(p+1), format="I", array=nelem_cols[p]))
+            name="NELEM" + str(p + 1), format="I", array=nelem_cols[p]))
         parvals_tabcols.append(fits.Column(
-            name="PAR"+str(p+1)+"VALUES", format="PD()",
+            name="PAR" + str(p + 1) + "VALUES", format="PD()",
             array=parvals_cols[p]))
         parnames_tabcols.append(fits.Column(
-            name="PAR"+str(p+1)+"NAMES", format=parnames_format,
+            name="PAR" + str(p + 1) + "NAMES", format=parnames_format,
             array=parnames_cols[p]))
 
     # create the set of results columns
@@ -718,11 +763,11 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
             bcols = bw_cols[p]
 
         flam_tabcols.append(fits.Column(
-            name='PHOTFLAM'+pstr, format=format_str, array=fcols))
+            name='PHOTFLAM' + pstr, format=format_str, array=fcols))
         plam_tabcols.append(fits.Column(
-            name='PHOTPLAM'+pstr, format=format_str, array=pcols))
+            name='PHOTPLAM' + pstr, format=format_str, array=pcols))
         bw_tabcols.append(fits.Column(
-            name='PHOTBW'+pstr, format=format_str, array=bcols))
+            name='PHOTBW' + pstr, format=format_str, array=bcols))
 
     # Now create the FITS file with the table in each extension
     log.info('Creating full table: {0}'.format(output))

@@ -1,5 +1,5 @@
-Compare Synphot and Pysynphot
-=============================
+Compare IRAF Synphot and Pysynphot
+==================================
 
 .. currentmodule:: reftools.synpysyncomp
 
