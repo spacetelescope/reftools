@@ -105,7 +105,7 @@ rules_dict = {
         'junk': [],
         'exclude': ['fr388n', 'fr459n', 'fr505n', 'fr656n', 'fr914m', 'aper#']},
     'acs,hrc,f555w': {'junk': [], 'exclude': []},
-    'acs,sbc': {'junk': [], 'exclude': ['mjd#']},
+    'acs,sbc': {'junk': [], 'exclude': ['']},
     'acs,wfc1': {
         'junk': ['wfc1'],
         'exclude': ['wfc2', 'fr1016n', 'fr388n', 'fr423n', 'fr459m', 'fr505n',
