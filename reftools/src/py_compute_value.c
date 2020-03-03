@@ -6,9 +6,7 @@
 
 #include "imphttab.h"
 
-#if PY_MAJOR_VERSION >= 3
 #define PyInt_AsLong(x) (PyLong_AsLong((x)))
-#endif
 
 /* function prototypes */
 static int fill_pht_row(PyObject *py_row, PhtRow *row);
@@ -44,11 +42,8 @@ static PyObject * py_compute_value(PyObject *self, PyObject *args) {
     PyErr_SetString(PyExc_KeyError, "Key npar not found in par dict.");
     return NULL;
   }
-#if PY_MAJOR_VERSION >= 3
+
   npars = (int) PyLong_AsLong(temp_obj);
-#else
-  npars = (int) PyInt_AsLong(temp_obj);
-#endif
 
   /* fill PhtRow struct (at least the parts we need) */
   if (fill_pht_row(py_row, &row) != 0) {
@@ -144,11 +139,9 @@ static int fill_pht_row(PyObject *py_row, PhtRow *row) {
       if (!temp_obj) {
         return (status = 1);
       }
-#if PY_MAJOR_VERSION >= 3
+
       temp_str = PyUnicode_AsUTF8(temp_obj);
-#else
-      temp_str = PyString_AsString(temp_obj);
-#endif
+
       if (!temp_str) {
         return (status = 1);
       }
@@ -260,11 +253,9 @@ static int fill_phot_par(PyObject *py_par, PhotPar *par) {
     if (!temp_obj) {
       return (status = 1);
     }
-#if PY_MAJOR_VERSION >= 3
+
     temp_str = PyUnicode_AsUTF8(temp_obj);
-#else
-    temp_str = PyString_AsString(temp_obj);
-#endif
+
     if (!temp_str) {
       return (status = 1);
     }
@@ -286,7 +277,6 @@ static PyMethodDef computephotpars_methods[] =
   {NULL, NULL, 0, NULL} /* sentinel */
 };
 
-#if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
     "_computephotpars",
@@ -305,9 +295,3 @@ PyObject *PyInit__computephotpars(void)
     m = PyModule_Create(&moduledef);
     return m;
 }
-
-#else
-PyMODINIT_FUNC init_computephotpars(void) {
-  (void) Py_InitModule("_computephotpars", computephotpars_methods);
-}
-#endif

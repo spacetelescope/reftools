@@ -7,9 +7,9 @@ Examples
 ...     'pctetab_pcte.fits', 'pctetab_dtdel.txt',
 ...     ['pctetab_chgleak-1.txt', 'pctetab_chgleak-2.txt'],
 ...     'pctetab_levels.txt', 'pctetab_scaling.txt',
-...     'pctetab_column_scaling.txt', history_file='pctetab_history.txt')
+...     'pctetab_column_scaling.txt', history_file='pctetab_history.txt')  # doctest: +SKIP
 
-"""
+"""  # noqa
 # :Authors: Pey Lian Lim, Matt Davis
 # :Organization: Space Telescope Science Institute
 # :History:
@@ -19,11 +19,9 @@ Examples
 #    * 2011-07-18 MRD updated to handle time dependence
 #    * 2011-11-29 MRD updated with column-by-column CTE scaling
 #    * 2013-08-13 PLL removed depreciated PyFITS calls and cleaned up codes.
-from __future__ import absolute_import, division, print_function
 
 # STDLIB
 import glob
-import sys
 import os
 
 # THIRD-PARTY
@@ -32,6 +30,7 @@ from astropy.io import fits
 
 __version__ = '1.2.0'
 __vdata__ = '13-Aug-2013'
+__all__ = ['PCTEFileError', 'MakePCTETab']
 
 
 class PCTEFileError(Exception):
@@ -39,10 +38,11 @@ class PCTEFileError(Exception):
     pass
 
 
-class _Text2Fits(object):
+class _Text2Fits:
     """Helper class for making the CTE parameters file (PCTETAB) from a
     collection of data saved in text files. The resulting fits file will
-    have information in the primary header and in at least four table extensions.
+    have information in the primary header and in at least four table
+    extensions.
 
     """
     def __init__(self):
@@ -88,7 +88,8 @@ class _Text2Fits(object):
 
         oversub_thresh : float
             Value for ``SUBTHRSH`` keyword in PCTEFILE header. CTE corrected
-            pixels taken below this value are re-corrected. Unit is in electrons.
+            pixels taken below this value are re-corrected. Unit is in
+            electrons.
 
         useafter : str
             Value for ``USEAFTER`` keyword.
@@ -118,17 +119,16 @@ class _Text2Fits(object):
         self.header.header['TELESCOP'] = 'HST'
         self.header.header['USEAFTER'] = useafter
         self.header.header['PEDIGREE'] = pedigree
-        self.header.header['DESCRIP'] = 'Parameters needed for pixel-based CTE correction ------------------'  # Must have 67 char
-        self.header.header.add_comment('= \'Created or updated by {0:s}\''.format(creatorName), before='ORIGIN')
-        self.header.header['NCHGLEAK'] = (nchg_leak, 'number of chg_leak extensions')
+        self.header.header['DESCRIP'] = 'Parameters needed for pixel-based CTE correction ------------------'  # Must have 67 char  # noqa
+        self.header.header.add_comment(f"= 'Created or updated by {creatorName}'", before='ORIGIN')  # noqa
+        self.header.header['NCHGLEAK'] = (nchg_leak, 'number of chg_leak extensions')  # noqa
 
         # This is detector-specific
         if detector == 'WFC':
             self.header.header['INSTRUME'] = 'ACS'
             self.header.header['DETECTOR'] = 'WFC'
         else:
-            raise PCTEFileError('Detector not supported: {0:s}'.format(
-                str(detector)))
+            raise PCTEFileError(f'Detector not supported: {detector}')
 
         # Optional HISTORY
         if os.path.isfile(history_file):
@@ -137,21 +137,26 @@ class _Text2Fits(object):
                     self.header.header.add_history(line[:-1])
 
         # the number of readout simulations done per column
-        self.header.header['SIM_NIT'] = (int(sim_nit), 'number of readout simulations done per column')
+        self.header.header['SIM_NIT'] = (
+            int(sim_nit), 'number of readout simulations done per column')
 
         # the number of shifts each column readout simulation is broken up into
-        self.header.header['SHFT_NIT'] = (int(shft_nit), 'num shifts col readout sim is broken up into')
+        self.header.header['SHFT_NIT'] = (
+            int(shft_nit), 'num shifts col readout sim is broken up into')
 
         # read noise level
-        self.header.header['RN_CLIP'] = (float(read_noise), 'Read noise level in electrons.')
+        self.header.header['RN_CLIP'] = (
+            float(read_noise), 'Read noise level in electrons.')
 
         # read noise smoothing algorithm
-        self.header.header['NSEMODEL'] = (int(noise_model), 'Read noise smoothing algorithm.')
+        self.header.header['NSEMODEL'] = (
+            int(noise_model), 'Read noise smoothing algorithm.')
 
         # over-subtraction correction threshold
-        self.header.header['SUBTHRSH'] = (float(oversub_thresh), 'Over-subtraction correction threshold.')
+        self.header.header['SUBTHRSH'] = (
+            float(oversub_thresh), 'Over-subtraction correction threshold.')
 
-    def make_dtde(self,dtde_file):
+    def make_dtde(self, dtde_file):
         """Make fits extension containing the dtde data that describes the
         marginal loss to CTE at the charge levels given in the file.
 
@@ -175,9 +180,9 @@ class _Text2Fits(object):
 
         """
         if not os.path.isfile(dtde_file):
-            raise IOError('Invalid dtde file: {0:s}'.format(str(dtde_file)))
+            raise IOError(f'Invalid dtde file: {dtde_file}')
 
-        lRange, colName, colData, colForm, colUnit = 0, {}, {}, {}, {}
+        colName, colData, colForm, colUnit = {}, {}, {}, {}
 
         # read in dtde data from text file
         with open(dtde_file) as fin:
@@ -209,11 +214,13 @@ class _Text2Fits(object):
         colUnit[1] = 'DN/S'
 
         c0 = fits.Column(name=colName[0], format=colForm[0], array=colData[0])
-        c1 = fits.Column(name=colName[1], format=colForm[1], unit=colUnit[1], array=colData[1])
+        c1 = fits.Column(name=colName[1], format=colForm[1], unit=colUnit[1],
+                         array=colData[1])
 
         self.dtde = fits.BinTableHDU.from_columns(fits.ColDefs([c0, c1]))
         self.dtde.header['EXTNAME'] = 'DTDE'
-        self.dtde.header['DATAFILE'] = (os.path.basename(dtde_file), 'data source file')
+        self.dtde.header['DATAFILE'] = (os.path.basename(dtde_file),
+                                        'data source file')
 
     def make_charge_leak(self, chg_leak_file, num):
         """Make fits extension containing parameterization of CTE losses along
@@ -238,8 +245,7 @@ class _Text2Fits(object):
 
         """
         if not os.path.isfile(chg_leak_file):
-            raise IOError('Invalid charge leak file: {0:s}'.format(
-                str(chg_leak_file)))
+            raise IOError(f'Invalid charge leak file: {chg_leak_file}')
 
         colRange, colName, colData, colForm, colUnit = 0, {}, {}, {}, {}
 
@@ -274,9 +280,11 @@ class _Text2Fits(object):
 
         # make sure we got our MJD values
         if not mjd1:
-            raise PCTEFileError('MJD1 parameter not correctly specified in {0:s}'.format(chg_leak_file))
+            raise PCTEFileError(
+                f'MJD1 parameter not correctly specified in {chg_leak_file}')
         elif not mjd2:
-            raise PCTEFileError('MJD2 parameter not correctly specified in {0:s}'.format(chg_leak_file))
+            raise PCTEFileError(
+                f'MJD2 parameter not correctly specified in {chg_leak_file}')
 
         # Convert data to Numpy arrays
         colData[0] = np.array(colData[0], dtype=np.int16)
@@ -289,13 +297,19 @@ class _Text2Fits(object):
             colUnit[i] = 'FRACTION'
 
         # Write to FITS table extension
-        tabData = [fits.Column(name=colName[i], format=colForm[i], unit=colUnit[i], array=colData[i]) for i in colRange]
+        tabData = [fits.Column(
+            name=colName[i], format=colForm[i], unit=colUnit[i],
+            array=colData[i]) for i in colRange]
 
-        self.charge_leak.append(fits.BinTableHDU.from_columns(fits.ColDefs(tabData)))
-        self.charge_leak[-1].header['EXTNAME'] = 'CHG_LEAK{0:d}'.format(num)
-        self.charge_leak[-1].header['MJD1'] = (mjd1, 'start valid time range for data')
-        self.charge_leak[-1].header['MJD2'] = (mjd2, 'end valid time range for data')
-        self.charge_leak[-1].header['DATAFILE'] = (os.path.basename(chg_leak_file), 'data source file')
+        self.charge_leak.append(fits.BinTableHDU.from_columns(
+            fits.ColDefs(tabData)))
+        self.charge_leak[-1].header['EXTNAME'] = f'CHG_LEAK{num}'
+        self.charge_leak[-1].header['MJD1'] = (
+            mjd1, 'start valid time range for data')
+        self.charge_leak[-1].header['MJD2'] = (
+            mjd2, 'end valid time range for data')
+        self.charge_leak[-1].header['DATAFILE'] = (
+            os.path.basename(chg_leak_file), 'data source file')
 
     def make_levels(self, levels_file):
         """Make fits extension containing charge levels at which to evaluate CTE
@@ -316,8 +330,7 @@ class _Text2Fits(object):
 
         """
         if not os.path.isfile(levels_file):
-            raise IOError('Invalid levels file: {0:s}'.format(
-                str(levels_file)))
+            raise IOError(f'Invalid levels file: {levels_file}')
 
         colData = []
 
@@ -343,7 +356,8 @@ class _Text2Fits(object):
 
         self.levels = fits.BinTableHDU.from_columns(fits.ColDefs([c1]))
         self.levels.header['EXTNAME'] = 'LEVELS'
-        self.levels.header['DATAFILE'] = (os.path.basename(levels_file), 'data source file')
+        self.levels.header['DATAFILE'] = (
+            os.path.basename(levels_file), 'data source file')
 
     def make_scale(self, scale_file):
         """Make fits extension containing time dependent CTE scaling.
@@ -363,10 +377,9 @@ class _Text2Fits(object):
 
         """
         if not os.path.isfile(scale_file):
-            raise IOError('Invalid scale file: {0:s}'.format(
-                str(scale_file)))
+            raise IOError(f'Invalid scale file: {scale_file}')
 
-        lRange, colName, colData, colForm, colUnit = 0, {}, {}, {}, {}
+        colName, colData, colForm, colUnit = {}, {}, {}, {}
 
         # read in dtde data from text file
         with open(scale_file) as fin:
@@ -397,12 +410,15 @@ class _Text2Fits(object):
         colForm[1] = 'E'
         colUnit[1] = 'FRACTION'
 
-        c0 = fits.Column(name=colName[0], format=colForm[0], unit=colUnit[0], array=colData[0])
-        c1 = fits.Column(name=colName[1], format=colForm[1], unit=colUnit[1], array=colData[1])
+        c0 = fits.Column(name=colName[0], format=colForm[0], unit=colUnit[0],
+                         array=colData[0])
+        c1 = fits.Column(name=colName[1], format=colForm[1], unit=colUnit[1],
+                         array=colData[1])
 
-        self.scale = fits.BinTableHDU.from_columns(fits.ColDefs([c0,c1]))
+        self.scale = fits.BinTableHDU.from_columns(fits.ColDefs([c0, c1]))
         self.scale.header['EXTNAME'] = 'CTE_SCALE'
-        self.scale.header['DATAFILE'] = (os.path.basename(scale_file), 'data source file')
+        self.scale.header['DATAFILE'] = (os.path.basename(scale_file),
+                                         'data source file')
 
     def make_column_scale(self, column_file):
         """Make fits extension containing column by column CTE scaling.
@@ -422,10 +438,9 @@ class _Text2Fits(object):
 
         """
         if not os.path.isfile(column_file):
-            raise IOError('Invalid column scale file: {0:s}'.format(
-                str(column_file)))
+            raise IOError(f'Invalid column scale file: {column_file}')
 
-        lRange, colName, colData, colForm, colUnit = 0, {}, {}, {}, {}
+        colName, colData, colForm, colUnit = {}, {}, {}, {}
 
         # read in dtde data from text file
         with open(column_file) as fin:
@@ -468,15 +483,22 @@ class _Text2Fits(object):
         colForm[4] = 'E'
         colUnit[4] = 'FRACTION'
 
-        c0 = fits.Column(name=colName[0], format=colForm[0], unit=colUnit[0], array=colData[0])
-        c1 = fits.Column(name=colName[1], format=colForm[1], unit=colUnit[1], array=colData[1])
-        c2 = fits.Column(name=colName[2], format=colForm[2], unit=colUnit[2], array=colData[2])
-        c3 = fits.Column(name=colName[3], format=colForm[3], unit=colUnit[3], array=colData[3])
-        c4 = fits.Column(name=colName[4], format=colForm[4], unit=colUnit[4], array=colData[4])
+        c0 = fits.Column(name=colName[0], format=colForm[0], unit=colUnit[0],
+                         array=colData[0])
+        c1 = fits.Column(name=colName[1], format=colForm[1], unit=colUnit[1],
+                         array=colData[1])
+        c2 = fits.Column(name=colName[2], format=colForm[2], unit=colUnit[2],
+                         array=colData[2])
+        c3 = fits.Column(name=colName[3], format=colForm[3], unit=colUnit[3],
+                         array=colData[3])
+        c4 = fits.Column(name=colName[4], format=colForm[4], unit=colUnit[4],
+                         array=colData[4])
 
-        self.col_scale = fits.BinTableHDU.from_columns(fits.ColDefs([c0,c1,c2,c3,c4]))
+        self.col_scale = fits.BinTableHDU.from_columns(fits.ColDefs(
+            [c0, c1, c2, c3, c4]))
         self.col_scale.header['EXTNAME'] = 'COL_SCALE'
-        self.col_scale.header['DATAFILE'] = (os.path.basename(column_file), 'data source file')
+        self.col_scale.header['DATAFILE'] = (os.path.basename(column_file),
+                                             'data source file')
 
     def make_fits(self):
         """Combine primary and table extensions into an HDU List and
@@ -634,40 +656,39 @@ def MakePCTETab(out_name, dtde_file, chg_leak_file, levels_file, scale_file,
     --------
     Saving file pctetab_pcte.fits with the command:
 
+    >>> from reftools.pctetab import MakePCTETab
     >>> MakePCTETab(
     ...     'pctetab_pcte.fits', 'pctetab_dtdel.txt',
     ...     ['pctetab_chgleak-1.txt', 'pctetab_chgleak-2.txt'],
     ...     'pctetab_levels.txt', 'pctetab_scaling.txt',
-    ...     'pctetab_column_scaling.txt', history_file='pctetab_history.txt')
+    ...     'pctetab_column_scaling.txt', history_file='pctetab_history.txt')  # doctest: +SKIP
 
-    """
+    """  # noqa
     # give the output file it's official suffix
     if out_name.find('_pcte.fits') == -1:
-        out_name = out_name + '_pcte.fits'
+        out_name = f'{out_name}_pcte.fits'
 
     # test for the presence of the input files
     if not os.path.isfile(dtde_file):
-        raise IOError('Invalid dtde file: {0:s}'.format(str(dtde_file)))
+        raise IOError(f'Invalid dtde file: {dtde_file}')
 
     if isinstance(chg_leak_file, str):
         chg_leak_file = glob.glob(chg_leak_file)
 
     for f in chg_leak_file:
         if not os.path.isfile(f):
-            raise IOError('Invalid charge leak file: {0:s}'.format(
-                str(chg_leak_file)))
+            raise IOError(f'Invalid charge leak file: {chg_leak_file}')
 
     nchg_leak = len(chg_leak_file)
 
     if not os.path.isfile(levels_file):
-        raise IOError('Invalid levels file: {0:s}'.format(str(levels_file)))
+        raise IOError(f'Invalid levels file: {levels_file}')
 
     if not os.path.isfile(scale_file):
-        raise IOError('Invalid scale file: {0:s}'.format(str(scale_file)))
+        raise IOError(f'Invalid scale file: {scale_file}')
 
     if not os.path.isfile(column_file):
-        raise IOError('Invalid column scaling file: {0:s}'.format(
-            str(column_file)))
+        raise IOError(f'Invalid column scaling file: {column_file}')
 
     # make Text2Fits object and run it's methods to construct fits extensions
     t2f = _Text2Fits()
@@ -686,5 +707,5 @@ def MakePCTETab(out_name, dtde_file, chg_leak_file, levels_file, scale_file,
     t2f.make_column_scale(column_file)
 
     # have t2f save the fits file
-    print('Saving file {0:s}'.format(str(out_name)))
+    print(f'Saving file {out_name}')
     t2f.make_fits()

@@ -15,9 +15,9 @@ Examples
 --------
 >>> from reftools import mkimphttab
 >>> mkimphttab.create_table('acs_wfc1', 'acs,wfc1', 'WFC1',
-...                         'Mar 01 2002 00:00:00', clobber=True, verbose=False)
+...                         'Mar 01 2002 00:00:00', clobber=True, verbose=False)  # doctest: +SKIP
 >>> mkimphttab.create_table('acs_sbc', 'acs,sbc', 'SBC',
-...                         'Mar 01 2002 00:00:00', clobber=True)
+...                         'Mar 01 2002 00:00:00', clobber=True)  # doctest: +SKIP
 
 .. currentmodule:: reftools.mkimphttab
 

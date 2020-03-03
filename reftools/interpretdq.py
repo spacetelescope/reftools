@@ -8,8 +8,8 @@ Examples
 Create a class instance for HST/ACS image using pre-defined DQ definitions.
 Then, display the associated metadata and translation table:
 
->>> acsdq = ImageDQ.from_fits('j12345678q_flt.fits', ext=('DQ', 2))
->>> acsdq.parser.metadata
+>>> acsdq = ImageDQ.from_fits('j12345678q_flt.fits', ext=('DQ', 2))  # doctest: +SKIP
+>>> acsdq.parser.metadata  # doctest: +SKIP
 <Table length=1>
    key     val
   str10    str3
@@ -38,7 +38,7 @@ uint16 ...                              str74
 Interpret DQ value for a single pixel at IRAF-style coordinate
 ``X=1457`` and ``Y=170``. Also display the original pixel value for comparison:
 
->>> acsdq.interpret_pixel(1457, 170)
+>>> acsdq.interpret_pixel(1457, 170)  # doctest: +SKIP
 <Table length=3>
 DQFLAG SHORT_DESCRIPTION LONG_DESCRIPTION
 uint16        str9            str74
@@ -46,13 +46,13 @@ uint16        str9            str74
     16               HOT        Hot pixel
     32               CTE         CTE tail
   1024              TRAP      Charge trap
->>> acsdq.data[169, 1456]
+>>> acsdq.data[169, 1456]  # doctest: +SKIP
 1072
 
 Interpret DQ values for all pixels. Then, extract mask for interpreted
 DQ value of 16 (hot pixel) and display pixel values for that mask:
 
->>> acsdq.interpret_all()
+>>> acsdq.interpret_all()  # doctest: +SKIP
 Parsing DQ flag(s)...
 Done!
 Run time: 2.822 s
@@ -73,8 +73,8 @@ FLAG=4096 : 0 (0.000%)
 FLAG=8192 : 0 (0.000%)
 FLAG=16384: 0 (0.000%)
 FLAG=32768: 0 (0.000%)
->>> hotmask = acsdq.dq_mask(16)
->>> acsdq.data[hotmask]
+>>> hotmask = acsdq.dq_mask(16)  # doctest: +SKIP
+>>> acsdq.data[hotmask]  # doctest: +SKIP
 array([528, 528, 528, ..., 560, 560, 560], dtype=int16)
 
 Create a class instance for HST/WFC3 DQ parser (without image).
@@ -91,13 +91,9 @@ uint16        str9                            str69
    256         SATURATED              Full-well or A-to-D saturated pixel
  16384             CRMAX Pixel has more than max CRs, ghost, or crosstalk
 
-"""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from astropy.extern.six import iteritems
-from astropy.extern.six.moves import map, zip
-
+"""  # noqa
 # STDLIB
+import os
 import time
 import warnings
 
@@ -111,7 +107,7 @@ from astropy.utils.exceptions import AstropyUserWarning
 __all__ = ['DQParser', 'ImageDQ']
 
 
-class DQParser(object):
+class DQParser:
     """Class to handle parsing of DQ flags.
 
     **Definition Table**
@@ -159,10 +155,10 @@ class DQParser(object):
         self._ldcol = 'LONG_DESCRIPTION'
         self.tab = ascii.read(
             definition_file,
-            names = (self._dqcol, self._sdcol, self._ldcol),
-            converters = {self._dqcol: [ascii.convert_numpy(np.uint16)],
-                          self._sdcol: [ascii.convert_numpy(np.str)],
-                          self._ldcol: [ascii.convert_numpy(np.str)]})
+            names=(self._dqcol, self._sdcol, self._ldcol),
+            converters={self._dqcol: [ascii.convert_numpy(np.uint16)],
+                        self._sdcol: [ascii.convert_numpy(np.str)],
+                        self._ldcol: [ascii.convert_numpy(np.str)]})
         self.metadata = ascii.read(self.tab.meta['comments'], delimiter='=',
                                    format='no_header', names=['key', 'val'])
 
@@ -203,14 +199,14 @@ class DQParser(object):
             instrument = instrument.upper()
 
         if instrument == 'ACS':
-            fname = 'data/dqflags_acs.txt'
+            fname = os.path.join('data', 'dqflags_acs.txt')
         elif instrument == 'WFC3':
-            fname = 'data/dqflags_wfc3.txt'
+            fname = os.path.join('data', 'dqflags_wfc3.txt')
         else:
             warnings.warn(
-                '{0} is not supported, using default'.format(instrument),
+                f'{instrument} is not supported, using default',
                 AstropyUserWarning)
-            fname = 'data/dqflags_hstgen.txt'
+            fname = os.path.join('data', 'dqflags_hstgen.txt')
 
         return cls(get_pkg_data_filename(fname))
 
@@ -255,12 +251,12 @@ class DQParser(object):
             nbad = np.sum(data != self._okflag)
             ntot = data.size
             pbad = 100.0 * nbad / ntot
-            print('Done!\nRun time: {0:.3f} s\nN_FLAGGED: {1}/{2} '
-                  '({3:.3f}%)'.format(t_end - t_beg, nbad, ntot, pbad))
+            print(f'Done!\nRun time: {t_end - t_beg:.3f} s\n'
+                  f'N_FLAGGED: {nbad}/{ntot} ({pbad:.3f}%)')
             for key in sorted(dqs_by_flag):
                 nbad = len(dqs_by_flag[key][0])
                 pbad = 100.0 * nbad / ntot
-                print('FLAG={0:<5d}: {1} ({2:.3f}%)'.format(key, nbad, pbad))
+                print(f'FLAG={key:<5d}: {nbad} ({pbad:.3f}%)')
 
         return dqs_by_flag
 
@@ -274,7 +270,7 @@ class DQParser(object):
 
         Returns
         -------
-        dqs : ``astropy.table.Table``
+        dqs : `astropy.table.Table`
             Table object containing a list of interpreted DQ values and
             their meanings.
 
@@ -285,8 +281,8 @@ class DQParser(object):
         unknown_flags = dqval & ~self._total_flags
         if unknown_flags:
             warnings.warn(
-                'Undefined DQ flags (sum={0}) found for input value {1}. '
-                'Ignoring these flags...'.format(unknown_flags, dqval),
+                f'Undefined DQ flags (sum={unknown_flags}) found for input '
+                f'value {dqval}. Ignoring these flags...',
                 AstropyUserWarning)
 
         # Good pixel, nothing to do
@@ -300,7 +296,7 @@ class DQParser(object):
         return self.tab[idx]
 
 
-class ImageDQ(object):
+class ImageDQ:
     """Class to handle DQ flags in an image.
 
     Parameters
@@ -330,12 +326,13 @@ class ImageDQ(object):
         data = np.asarray(data)
 
         if data.ndim != ndim:
-            raise ValueError('Expected ndim={0} but data has '
-                             'ndim={1}'.format(ndim, data.ndim))
+            raise ValueError(
+                f'Expected ndim={ndim} but data has ndim={data.ndim}')
 
         if 'int' not in data.dtype.name:
-            warnings.warn('Data has dtype={0}, will be converted to '
-                          'int...'.format(data.dtype), AstropyUserWarning)
+            warnings.warn(
+                f'Data has dtype={data.dtype}, will be converted to int...',
+                AstropyUserWarning)
 
         if dqparser is None or not isinstance(dqparser, DQParser):
             dqparser = DQParser.from_instrument(None)
@@ -372,8 +369,8 @@ class ImageDQ(object):
                 instrument = pf['PRIMARY'].header[inskey]
             except Exception as e:
                 warnings.warn(
-                    'Failed to read {0} from PRIMARY header, using default: '
-                    '{1}'.format(inskey, str(e)), AstropyUserWarning)
+                    f'Failed to read {inskey} from PRIMARY header, using '
+                    f'default: {repr(e)}', AstropyUserWarning)
                 dqparser = None
             else:
                 dqparser = DQParser.from_instrument(instrument)
@@ -390,7 +387,7 @@ class ImageDQ(object):
 
         Returns
         -------
-        dqs : ``astropy.table.Table``
+        dqs : `astropy.table.Table`
             Table object containing a list of interpreted DQ values and
             their meanings.
 
@@ -442,8 +439,8 @@ class ImageDQ(object):
         self._check_cache()
 
         if dqval not in self._dqs_by_flag:
-            raise ValueError('DQ={0} not found in {1}'.format(
-                dqval, sorted(self._dqs_by_flag)))
+            raise ValueError(
+                f'DQ={dqval} not found in {sorted(self._dqs_by_flag)}')
 
         mask = np.zeros_like(self.data, dtype=np.bool)
         mask[self._dqs_by_flag[dqval]] = True
@@ -464,7 +461,7 @@ class ImageDQ(object):
         self._check_cache()
         pixlist_by_flag = {}
 
-        for key, idx in iteritems(self._dqs_by_flag):
+        for key, idx in self._dqs_by_flag.items():
             pixlist_by_flag[key] = list(zip(idx[1] + 1, idx[0] + 1))
 
         return pixlist_by_flag

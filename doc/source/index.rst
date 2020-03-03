@@ -13,7 +13,6 @@ Contents:
 
    mkimphttab
    imphtcomp
-   synpysyncomp
    getphotpars
    pctetab
    interpretdq

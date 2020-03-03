@@ -1,5 +1,10 @@
 include README.rst
+include CHANGES.rst
 include LICENSE.txt
+include CITATION.md
+
+include setup.cfg
+include pyproject.toml
 
 recursive-include doc *
 recursive-include reftools/src *.c *.h

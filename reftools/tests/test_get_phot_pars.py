@@ -5,379 +5,232 @@
   if ``getphotpars`` is still used.
 
 """
-from __future__ import absolute_import
-
-import unittest
-from unittest import TestCase
-from nose import tools
+import pytest
+from astropy.utils.data import get_pkg_data_filename
+from numpy.testing import assert_allclose
 
 from .. import getphotpars
 
 
-class TestGetPhotPars(TestCase):
-  def setUp(self):
-    self.get_pars = getphotpars.GetPhotPars('data/test_wfc1_dev_imp.fits')
-
-  def tearDown(self):
-    self.get_pars.close()
-
-  def test_get_row_len(self):
-    obsmode = 'acs,wfc1,f625w,f814w,MJD#'
-    ext = 'photflam'
-
-    row = self.get_pars._get_row(obsmode,ext)
-
-    self.assertEqual(len(row[0]),13)
-
-  def test_get_row_obs(self):
-    obsmode = 'acs,wfc1,f625w,f814w,MJD#'
-    ext = 'photflam'
-
-    row = self.get_pars._get_row(obsmode,ext)
-
-    self.assertEqual(row['obsmode'],obsmode)
-
-  def test_parse_obsmode0(self):
-    obsmode = 'acs,wfc1,f625w,f660n'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    self.assertEqual(npars,0)
-    self.assertEqual(strp_obsmode,'acs,wfc1,f625w,f660n')
-    self.assertEqual(par_dict,{})
-
-  def test_parse_obsmode1(self):
-    obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    self.assertEqual(npars,1)
-    self.assertEqual(strp_obsmode,'acs,wfc1,f625w,f814w,MJD#'.lower())
-    self.assertEqual(par_dict.keys()[0],'MJD#'.lower())
-    self.assertEqual(par_dict['MJD#'.lower()],55000.0)
-
-  def test_parse_obsmode2(self):
-    obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    self.assertEqual(npars,2)
-    self.assertEqual(strp_obsmode,'acs,wfc1,f625w,fr505n#,MJD#'.lower())
-    self.assertTrue('MJD#'.lower() in par_dict.keys())
-    self.assertTrue('fr505n#'.lower() in par_dict.keys())
-    self.assertEqual(par_dict['MJD#'.lower()],55000.0)
-    self.assertEqual(par_dict['fr505n#'.lower()],5000.0)
-
-  def test_make_row_struct0(self):
-    obsmode = 'acs,wfc1,f625w,f660n'
-    ext = 'photflam'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    row = self.get_pars._get_row(strp_obsmode,ext)
-
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    self.assertEqual(rd['obsmode'].lower(),obsmode.lower())
-    self.assertEqual(rd['datacol'].lower(),'photflam')
-    self.assertEqual(rd['parnames'],[])
-    self.assertEqual(rd['parnum'],0)
-    self.assertEqual(rd['results'],5.8962401031019617e-18)
-    self.assertEqual(rd['telem'],1)
-    self.assertEqual(rd['nelem'],[])
-    self.assertEqual(rd['parvals'],[])
-
-  # ValueError: new type not compatible with array
-  @unittest.expectedFailure
-  def test_make_row_struct1(self):
-    obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
-    ext = 'photflam'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    row = self.get_pars._get_row(strp_obsmode,ext)
-
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    self.assertEqual(rd['obsmode'].lower(),strp_obsmode.lower())
-    self.assertEqual(rd['datacol'].lower(),'photflam1')
-    self.assertEqual(rd['parnames'],['MJD#'])
-    self.assertEqual(rd['parnum'],1)
-    self.assertEqual(rd['results'],[8.353948620387228e-18, 8.353948620387228e-18,
-                                    8.439405629259882e-18, 8.439405629259882e-18])
-    self.assertEqual(rd['telem'],4)
-    self.assertEqual(rd['nelem'],[4])
-    self.assertEqual(rd['parvals'],[[52334.0, 53919.0, 53920.0, 55516.0]])
-
-  # ValueError: new type not compatible with array
-  @unittest.expectedFailure
-  def test_make_row_struct2(self):
-    obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
-    ext = 'photflam'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    row = self.get_pars._get_row(strp_obsmode,ext)
-
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    self.assertEqual(rd['obsmode'].lower(),strp_obsmode.lower())
-    self.assertEqual(rd['datacol'].lower(),'photflam2')
-    self.assertEqual(rd['parnames'],['FR505N#','MJD#'])
-    self.assertEqual(rd['parnum'],2)
-    self.assertEqual(rd['results'],[7.003710657512407e-14, 6.944751784992699e-14,
-                                    5.933229935875258e-14, 6.903709791285467e-14,
-                                    6.679623972708115e-14, 5.70322329920528e-14,
-                                    6.871738863125632e-14, 6.430043639034794e-14,
-                                    5.2999039030883145e-14, 6.984240267831951e-14,
-                                    6.158040091027122e-14, 6.903709791285467e-14,
-                                    6.679623972708115e-14, 5.70322329920528e-14,
-                                    6.777606555875925e-14, 6.344417923365138e-14,
-                                    5.230630810980452e-14, 6.984240267831951e-14,
-                                    6.158040091027122e-14, 7.102142054088e-14,
-                                    7.038429771136416e-14, 6.012566486354809e-14,
-                                    6.777606555875925e-14, 6.344417923365138e-14,
-                                    5.230630810980452e-14, 6.889989612586935e-14,
-                                    6.076197306179641e-14, 7.102142054088e-14,
-                                    7.038429771136416e-14, 6.012566486354809e-14,
-                                    7.000118709415907e-14, 6.7696605688248e-14,
-                                    5.778989112976214e-14, 6.889989612586935e-14,
-                                    6.076197306179641e-14, 7.003710657512407e-14,
-                                    6.944751784992699e-14, 5.933229935875258e-14,
-                                    7.000118709415907e-14, 6.7696605688248e-14,
-                                    5.778989112976214e-14, 6.871738863125632e-14,
-                                    6.430043639034794e-14, 5.2999039030883145e-14])
-    self.assertEqual(rd['telem'],44)
-    self.assertEqual(rd['nelem'],[11,4])
-    self.assertEqual(rd['parvals'],[[4824.0, 4868.2, 4912.4, 4956.6, 5000.8,
-                                     5045.0, 5089.2, 5133.4, 5177.6, 5221.8, 5266.0],
-                                     [52334.0, 53919.0, 53920.0, 55516.0]])
-
-  def test_make_par_struct0(self):
-    obsmode = 'acs,wfc1,f625w,f660n'
-    ext = 'photflam'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    ps = self.get_pars._make_par_struct(npars,par_dict)
-
-    self.assertEqual(ps['npar'],0)
-    self.assertEqual(ps['parnames'],[])
-    self.assertEqual(ps['parvals'],[])
-
-  def test_make_par_struct1(self):
-    obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
-    ext = 'photflam'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    ps = self.get_pars._make_par_struct(npars,par_dict)
-
-    self.assertEqual(ps['npar'],1)
-    self.assertEqual(ps['parnames'],['mjd#'])
-    self.assertEqual(ps['parvals'],[55000.0])
-
-  def test_make_par_struct2(self):
-    obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
-    ext = 'photflam'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    ps = self.get_pars._make_par_struct(npars,par_dict)
-
-    self.assertEqual(ps['npar'],2)
-    self.assertEqual(sorted(ps['parnames']),['fr505n#','mjd#'])
-    self.assertEqual(sorted(ps['parvals']),[5000.0,55000.0])
-
-  def test_compute_value0(self):
-    obsmode = 'acs,wfc1,f625w,f660n'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    ps = self.get_pars._make_par_struct(npars,par_dict)
-
-    ext = 'photflam'
-    row = self.get_pars._get_row(strp_obsmode,ext)
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    result = self.get_pars._compute_value(rd,ps)
-
-    self.assertEqual(result,5.8962401031019617e-18)
-
-    ext = 'photplam'
-    row = self.get_pars._get_row(strp_obsmode,ext)
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    result = self.get_pars._compute_value(rd,ps)
-
-    self.assertEqual(result,6599.6045327828697)
-
-    ext = 'photbw'
-    row = self.get_pars._get_row(strp_obsmode,ext)
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    result = self.get_pars._compute_value(rd,ps)
-
-    self.assertEqual(result,13.622138313347964)
-
-  # ValueError: new type not compatible with array
-  @unittest.expectedFailure
-  def test_compute_value1(self):
-    obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    ps = self.get_pars._make_par_struct(npars,par_dict)
-
-    ext = 'photflam'
-    row = self.get_pars._get_row(strp_obsmode,ext)
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    result = self.get_pars._compute_value(rd,ps)
-
-    tools.assert_almost_equals(result,8.43940563e-18,25)
-
-    ext = 'photplam'
-    row = self.get_pars._get_row(strp_obsmode,ext)
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    result = self.get_pars._compute_value(rd,ps)
-
-    tools.assert_almost_equals(result,6992.37762323,8)
-
-    ext = 'photbw'
-    row = self.get_pars._get_row(strp_obsmode,ext)
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    result = self.get_pars._compute_value(rd,ps)
-
-    tools.assert_almost_equals(result,58.85223114,8)
-
-  # ValueError: new type not compatible with array
-  @unittest.expectedFailure
-  def test_compute_value2(self):
-    obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
-
-    npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
-
-    ps = self.get_pars._make_par_struct(npars,par_dict)
-
-    ext = 'photflam'
-    row = self.get_pars._get_row(strp_obsmode,ext)
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    result = self.get_pars._compute_value(rd,ps)
-
-    tools.assert_almost_equals(result,5.99660350e-14,21)
-
-    ext = 'photplam'
-    row = self.get_pars._get_row(strp_obsmode,ext)
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    result = self.get_pars._compute_value(rd,ps)
-
-    tools.assert_almost_equals(result,5737.95131007,8)
-
-    ext = 'photbw'
-    row = self.get_pars._get_row(strp_obsmode,ext)
-    rd = self.get_pars._make_row_struct(row,npars)
-
-    result = self.get_pars._compute_value(rd,ps)
-
-    tools.assert_almost_equals(result,643.42528984,8)
-
-class TestGetPhotParsFunc(TestCase):
-  def test_0_old(self):
-    obsmode = 'acs,wfc1,f625w,f660n'
-    imphttab = 'data/test_wfc1_dev_imp.fits'
-
-    results=getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(results["PHOTZPT"],-21.1)
-    tools.assert_almost_equals(results["PHOTFLAM"],5.8962401031019617e-18)
-    tools.assert_almost_equals(results["PHOTPLAM"],6599.6045327828697)
-    tools.assert_almost_equals(results["PHOTBW"],13.622138313347964)
-
-  # ValueError: new type not compatible with array
-  @unittest.expectedFailure
-  def test_1_old(self):
-    obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
-    imphttab = 'data/test_wfc1_dev_imp.fits'
-
-    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-    results=getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(results["PHOTZPT"],-21.1)
-    tools.assert_almost_equals(results["PHOTFLAM"],8.43940563e-18)
-    tools.assert_almost_equals(results["PHOTPLAM"],6992.37762323)
-    tools.assert_almost_equals(results["PHOTBW"],58.85223114)
-
-  # ValueError: new type not compatible with array
-  @unittest.expectedFailure
-  def test_2_old(self):
-    obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
-    imphttab = 'data/test_wfc1_dev_imp.fits'
-
-    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-    results=getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(results["PHOTZPT"],-21.1)
-    tools.assert_almost_equals(results["PHOTFLAM"],5.99660350e-14)
-    tools.assert_almost_equals(results["PHOTPLAM"],5737.95131007)
-    tools.assert_almost_equals(results["PHOTBW"],643.42528984)
-
-  def test_0_new(self):
-    obsmode = 'acs,wfc1,f625w,f660n'
-    imphttab = 'data/test_acs_wfc1_dev_imp.fits'
-
-    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-    results=getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(results["PHOTZPT"],-21.1)
-    tools.assert_almost_equals(results["PHOTFLAM"],5.8962401031019617e-18)
-    tools.assert_almost_equals(results["PHOTPLAM"],6599.6045327828697)
-    tools.assert_almost_equals(results["PHOTBW"],13.622138313347964)
-
-  # ValueError: new type not compatible with array
-  @unittest.expectedFailure
-  def test_1_new(self):
-    obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
-    imphttab = 'data/test_acs_wfc1_dev_imp.fits'
-
-    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-    results=getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(results["PHOTZPT"],-21.1)
-    tools.assert_almost_equals(results["PHOTFLAM"],8.43940563e-18,25)
-    tools.assert_almost_equals(results["PHOTPLAM"],6992.37762323,8)
-    tools.assert_almost_equals(results["PHOTBW"],58.85223114,8)
-
-  # ValueError: new type not compatible with array
-  @unittest.expectedFailure
-  def test_2_new(self):
-    obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
-    imphttab = 'data/test_acs_wfc1_dev_imp.fits'
-
-    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-    results=getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(results["PHOTZPT"],-21.1)
-    tools.assert_almost_equals(results["PHOTFLAM"],5.99660350e-14,21)
-    tools.assert_almost_equals(results["PHOTPLAM"],5737.95131007,8)
-    tools.assert_almost_equals(results["PHOTBW"],643.42528984,8)
-
-
-class TestEdgeCase(TestCase):
-  # ValueError: new type not compatible with array
-  @unittest.expectedFailure
-  def test1(self):
-    obsmode = 'acs,wfc1,fr931n#8905'
-    imphttab = 'data/test_acs_wfc1_dev_imp.fits'
-
-    #zpt, flam, plam, bw = getphotpars.get_phot_pars(obsmode, imphttab)
-    results=getphotpars.get_phot_pars(obsmode, imphttab)
-
-    self.assertEqual(results["PHOTZPT"],-21.1)
-    tools.assert_almost_equals(results["PHOTFLAM"],1.4852052585262792e-18,21)
-    tools.assert_almost_equals(results["PHOTPLAM"],8903.8757202468823,8)
-    tools.assert_almost_equals(results["PHOTBW"],64.255181883310669,8)
+class TestGetPhotPars:
+    def setup_class(self):
+        self.get_pars = getphotpars.GetPhotPars(
+            get_pkg_data_filename('data/test_wfc1_dev_imp.fits'))
+
+    def teardown_class(self):
+        self.get_pars.close()
+
+    def test_get_row_len_obs(self):
+        obsmode = 'acs,wfc1,f625w,f814w,MJD#'
+        row = self.get_pars._get_row(obsmode, 'photflam')
+        assert len(row[0]) == 13
+        assert row['obsmode'] == obsmode
+
+    def test_parse_obsmode_and_make_row_struct_and_compute_value_0(self):
+        obsmode = 'acs,wfc1,f625w,f660n'
+        ext = 'photflam'
+        npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
+        row = self.get_pars._get_row(strp_obsmode, ext)
+        rd = self.get_pars._make_row_struct(row, npars)
+        ps = self.get_pars._make_par_struct(npars, par_dict)
+
+        assert npars == 0
+        assert strp_obsmode == obsmode
+        assert len(par_dict) == 0
+
+        assert rd['obsmode'].lower() == obsmode
+        assert rd['datacol'].lower() == ext
+        assert len(rd['parnames']) == 0
+        assert rd['parnum'] == 0
+        assert_allclose(rd['results'], 5.8962401031019617e-18)
+        assert rd['telem'] == 1
+        assert len(rd['nelem']) == 0
+        assert len(rd['parvals']) == 0
+
+        assert ps['npar'] == 0
+        assert len(ps['parnames']) == 0
+        assert len(ps['parvals']) == 0
+
+        assert_allclose(self.get_pars._compute_value(rd, ps),
+                        5.8962401031019617e-18)
+
+        rd_2 = self.get_pars._make_row_struct(self.get_pars._get_row(
+            strp_obsmode, 'photplam'), npars)
+        assert_allclose(self.get_pars._compute_value(rd_2, ps),
+                        6599.6045327828697)
+
+        rd_3 = self.get_pars._make_row_struct(self.get_pars._get_row(
+            strp_obsmode, 'photbw'), npars)
+        assert_allclose(self.get_pars._compute_value(rd_3, ps),
+                        13.622138313347964)
+
+    def test_parse_obsmode_and_make_par_struct_1(self):
+        npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(
+            'acs,wfc1,f625w,f814w,MJD#55000.0')
+        assert npars == 1
+        assert strp_obsmode == 'acs,wfc1,f625w,f814w,mjd#'
+        assert list(par_dict)[0] == 'mjd#'
+        assert par_dict['mjd#'] == 55000
+
+        ps = self.get_pars._make_par_struct(npars, par_dict)
+        assert ps['npar'] == 1
+        assert ps['parnames'] == ['mjd#']
+        assert_allclose(ps['parvals'], [55000])
+
+    def test_parse_obsmode_and_make_par_struct_2(self):
+        npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(
+            'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0')
+        keys = list(par_dict)
+        assert npars == 2
+        assert strp_obsmode == 'acs,wfc1,f625w,fr505n#,mjd#'
+        assert 'mjd#' in keys
+        assert 'fr505n#' in keys
+        assert par_dict['mjd#'] == 55000
+        assert par_dict['fr505n#'] == 5000
+
+        ps = self.get_pars._make_par_struct(npars, par_dict)
+        assert ps['npar'] == 2
+        assert sorted(ps['parnames']) == ['fr505n#', 'mjd#']
+        assert_allclose(sorted(ps['parvals']), [5000, 55000])
+
+    @pytest.mark.xfail(reason='new type not compatible with array')
+    def test_make_row_struct_1(self):
+        obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
+        npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
+        row = self.get_pars._get_row(strp_obsmode, 'photflam')
+        rd = self.get_pars._make_row_struct(row, npars)
+        assert rd['obsmode'].lower() == strp_obsmode.lower()
+        assert rd['datacol'].lower() == 'photflam1'
+        assert rd['parnames'] == ['MJD#']
+        assert rd['parnum'] == 1
+        assert_allclose(rd['results'],
+                        [8.353948620387228e-18, 8.353948620387228e-18,
+                         8.439405629259882e-18, 8.439405629259882e-18])
+        assert rd['telem'] == 4
+        assert rd['nelem'] == [4]
+        assert_allclose(rd['parvals'], [[52334.0, 53919.0, 53920.0, 55516.0]])
+
+    @pytest.mark.xfail(reason='new type not compatible with array')
+    def test_make_row_struct_2(self):
+        obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
+        npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
+        row = self.get_pars._get_row(strp_obsmode, 'photflam')
+        rd = self.get_pars._make_row_struct(row, npars)
+
+        assert rd['obsmode'].lower() == strp_obsmode.lower()
+        assert rd['datacol'].lower() == 'photflam2'
+        assert rd['parnames'] == ['FR505N#', 'MJD#']
+        assert rd['parnum'] == 2
+        assert rd['telem'] == 44
+        assert rd['nelem'] == [11, 4]
+
+        ans = [
+            7.003710657512407e-14, 6.944751784992699e-14, 5.933229935875258e-14,
+            6.903709791285467e-14, 6.679623972708115e-14, 5.70322329920528e-14,
+            6.871738863125632e-14, 6.430043639034794e-14, 5.2999039030883145e-14,  # noqa
+            6.984240267831951e-14, 6.158040091027122e-14, 6.903709791285467e-14,
+            6.679623972708115e-14, 5.70322329920528e-14, 6.777606555875925e-14,
+            6.344417923365138e-14, 5.230630810980452e-14, 6.984240267831951e-14,
+            6.158040091027122e-14, 7.102142054088e-14, 7.038429771136416e-14,
+            6.012566486354809e-14, 6.777606555875925e-14, 6.344417923365138e-14,
+            5.230630810980452e-14, 6.889989612586935e-14, 6.076197306179641e-14,
+            7.102142054088e-14, 7.038429771136416e-14, 6.012566486354809e-14,
+            7.000118709415907e-14, 6.7696605688248e-14, 5.778989112976214e-14,
+            6.889989612586935e-14, 6.076197306179641e-14, 7.003710657512407e-14,
+            6.944751784992699e-14, 5.933229935875258e-14, 7.000118709415907e-14,
+            6.7696605688248e-14, 5.778989112976214e-14, 6.871738863125632e-14,
+            6.430043639034794e-14, 5.2999039030883145e-14]
+        assert_allclose(rd['results'], ans)
+        assert_allclose(
+            rd['parvals'],
+            [[4824, 4868.2, 4912.4, 4956.6, 5000.8, 5045, 5089.2, 5133.4,
+              5177.6, 5221.8, 5266],
+             [52334, 53919, 53920, 55516]])
+
+    @pytest.mark.xfail(reason='new type not compatible with array')
+    def test_compute_value_1(self):
+        npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(
+            'acs,wfc1,f625w,f814w,MJD#55000.0')
+        ps = self.get_pars._make_par_struct(npars, par_dict)
+
+        ext = 'photflam'
+        row = self.get_pars._get_row(strp_obsmode, ext)
+        rd = self.get_pars._make_row_struct(row, npars)
+        result = self.get_pars._compute_value(rd, ps)
+        assert_allclose(result, 8.43940563e-18)
+
+        ext = 'photplam'
+        row = self.get_pars._get_row(strp_obsmode, ext)
+        rd = self.get_pars._make_row_struct(row, npars)
+        result = self.get_pars._compute_value(rd, ps)
+        assert_allclose(result, 6992.37762323)
+
+        ext = 'photbw'
+        row = self.get_pars._get_row(strp_obsmode, ext)
+        rd = self.get_pars._make_row_struct(row, npars)
+        result = self.get_pars._compute_value(rd, ps)
+        assert_allclose(result, 58.85223114)
+
+    @pytest.mark.xfail(reason='new type not compatible with array')
+    def test_compute_value_2(self):
+        npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(
+            'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0')
+        ps = self.get_pars._make_par_struct(npars, par_dict)
+
+        ext = 'photflam'
+        row = self.get_pars._get_row(strp_obsmode, ext)
+        rd = self.get_pars._make_row_struct(row, npars)
+        result = self.get_pars._compute_value(rd, ps)
+        assert_allclose(result, 5.99660350e-14)
+
+        ext = 'photplam'
+        row = self.get_pars._get_row(strp_obsmode, ext)
+        rd = self.get_pars._make_row_struct(row, npars)
+        result = self.get_pars._compute_value(rd, ps)
+        assert_allclose(result, 5737.95131007)
+
+        ext = 'photbw'
+        row = self.get_pars._get_row(strp_obsmode, ext)
+        rd = self.get_pars._make_row_struct(row, npars)
+        result = self.get_pars._compute_value(rd, ps)
+        assert_allclose(result, 643.42528984)
+
+
+@pytest.mark.parametrize(
+    ('obsmode', 'imphttab', 'photflam', 'photplam', 'photbw'),
+    [('acs,wfc1,f625w,f660n', 'data/test_wfc1_dev_imp.fits',
+      5.8962401031019617e-18, 6599.6045327828697, 13.622138313347964),
+     ('acs,wfc1,f625w,f660n', 'data/test_acs_wfc1_dev_imp.fits',
+      5.8962401031019617e-18, 6599.6045327828697, 13.622138313347964)])
+def test_get_phot_pars_func(obsmode, imphttab, photflam, photplam, photbw):
+    results = getphotpars.get_phot_pars(
+        obsmode, get_pkg_data_filename(imphttab))
+    assert results["PHOTZPT"] == -21.1
+    assert_allclose(results["PHOTFLAM"], photflam)
+    assert_allclose(results["PHOTPLAM"], photplam)
+    assert_allclose(results["PHOTBW"], photbw)
+
+
+# TODO: Merge this with test_get_phot_pars_func() when fixed.
+@pytest.mark.xfail(reason='new type not compatible with array')
+@pytest.mark.parametrize(
+    ('obsmode', 'imphttab', 'photflam', 'photplam', 'photbw'),
+    [('acs,wfc1,f625w,f814w,MJD#55000.0', 'data/test_wfc1_dev_imp.fits',
+      8.43940563e-18, 6992.37762323, 58.85223114),
+     ('acs,wfc1,f625w,f814w,MJD#55000.0', 'data/test_acs_wfc1_dev_imp.fits',
+      8.43940563e-18, 6992.37762323, 58.85223114),
+     ('acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0',
+      'data/test_wfc1_dev_imp.fits',
+      5.99660350e-14, 5737.95131007, 643.42528984),
+     ('acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0',
+      'data/test_acs_wfc1_dev_imp.fits',
+      5.99660350e-14, 5737.95131007, 643.42528984),
+     ('acs,wfc1,fr931n#8905', 'data/test_acs_wfc1_dev_imp.fits',
+      1.4852052585262792e-18, 8903.8757202468823, 64.255181883310669)])
+def test_get_phot_pars_func_2(obsmode, imphttab, photflam, photplam, photbw):
+    results = getphotpars.get_phot_pars(
+        obsmode, get_pkg_data_filename(imphttab))
+    assert results["PHOTZPT"] == -21.1
+    assert_allclose(results["PHOTFLAM"], photflam)
+    assert_allclose(results["PHOTPLAM"], photplam)
+    assert_allclose(results["PHOTBW"], photbw)

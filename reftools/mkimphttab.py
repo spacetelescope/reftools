@@ -1,5 +1,4 @@
 """Use this module to create an IMPHTTAB for an instrument."""
-from __future__ import absolute_import, print_function, division
 
 # STDLIB
 import os
@@ -60,42 +59,6 @@ def compute_values(obsmode, component_dict):
     return {'PHOTFLAM': uresp, 'PHOTPLAM': bp.pivot(), 'PHOTBW': bp.photbw()}
 
 
-def compute_synphot_values(obsmode):
-    """Calculate the same values as :func:`compute_values` but
-    using IRAF SYNPHOT.
-
-    .. note::
-
-        This is replaced by :func:`compute_values` but kept for debugging.
-
-    Parameters
-    ----------
-    obsmode : str
-        Observation mode for which to calculate values.
-
-    Returns
-    -------
-    valdict : dict
-        Dictionary with photometry keywords as keys.
-
-    """
-    from pyraf import iraf  # noqa
-    from iraf import stsdas, hst_calib, synphot  # noqa
-
-    tmpfits = os.path.join(tempfile.gettempdir(), 'temp.fits')
-    synphot.bandpar(obsmode, output=tmpfits, Stdout=1)
-
-    with fits.open(tmpfits) as f:
-        d = f[1].data
-        photflam = d['uresp'][0]
-        pivot = d['pivwv'][0]
-        rmswidth = d['bandw'][0]
-
-    os.remove(tmpfits)
-
-    return {'PHOTFLAM': photflam, 'PHOTPLAM': pivot, 'PHOTBW': rmswidth}
-
-
 def expand_obsmodes(basemode, pardict):
     """Generate a set of observation mode strings spanning all the
     combinations of the ``basemode`` as specified in ``pardict``.
@@ -122,12 +85,11 @@ def expand_obsmodes(basemode, pardict):
 
     """
     basemode = basemode.lower()
-    # obsmode_str = '%s,%s#%0.4f'
     olist = list()
 
     if len(pardict) > 0:
         for k in pardict.keys():
-            basemode = basemode.replace('{0},'.format(k), '')
+            basemode = basemode.replace(f'{k},', '')
 
     # we don't have any parameterized variables, so just return the basemode
     if len(pardict) == 0:
@@ -173,6 +135,7 @@ def interpret_obsmode(obsmode):
 
     Examples
     --------
+    >>> from reftools.mkimphttab import interpret_obsmode
     >>> interpret_obsmode('acs,wfc1,mjd#52334.0000,fr853n#8158.0000')
     'acs,wfc1,mjd#,fr853n#'
 
@@ -262,7 +225,7 @@ def make_pri_hdu(filename, numpars, instrument, detector, pedigree, useafter):
 
     phdu.header['DATE'] = (get_date(), 'Date FITS file was generated')
     phdu.header['ORIGIN'] = ('astropy-fits',
-                             'astropy version {0}'.format(astropy.__version__))
+                             f'astropy version {astropy.__version__}')
     phdu.header['FILENAME'] = (filename, 'Name of file')
     phdu.header['FILETYPE'] = ('Image photometry table', 'File type')
     phdu.header['NEXTEND'] = (3, 'Number of extensions in file')
@@ -431,7 +394,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     #
     # Start by determining the maximum num of parameters in any given obsmode
     max_npars = np.array(npar_vals, np.int32).max()
-    log.info('MAX_NPARS: {0}   NROWS: {1}'.format(max_npars, nrows))
+    log.info(f'MAX_NPARS: {max_npars}   NROWS: {nrows}')
 
     # Now, define empty lists for NELEM* and PAR*VALUES columns
     #
@@ -496,13 +459,13 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     skipped_obs = []
 
     if verbose:
-        log.info('Computing photmetry values for each row\'s obsmode...')
+        log.info("Computing photmetry values for each row's obsmode...")
         sys.stdout.flush()
 
     for nr in range(nrows):
         # Provide some indication of which row is being worked
         if verbose:
-            log.info('Row: {0}'.format(nr + 1))
+            log.info(f'Row: {nr + 1}')
             sys.stdout.flush()
 
         obsmode = obsmodes[nr]
@@ -524,7 +487,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         # If there are warnings from here, try updating rules_dict
         # in graphtab.py
         if nmodes == 0 and verbose:
-            log.warn('No info for {0}'.format(obsmode))
+            log.warning(f'No info for {obsmode}')
 
         pflam = np.zeros(nmodes, np.float64)
         pplam = np.zeros(nmodes, np.float64)
@@ -536,7 +499,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
             try:
                 value = compute_values(fullmode, component_dict)
             except ValueError as e:
-                if e.message == 'Integrated flux is <= 0':
+                if 'Integrated flux is <= 0' in str(e):
                     # integrated flux is zero, skip this obsmode
                     skip = True
                     skipped_obs.append(obsmode)
@@ -549,15 +512,15 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
                     parnames_rows = np.delete(parnames_rows, nr, 0)
 
                     if verbose:
-                        log.info('\tSkipping {0}'.format(obsmode))
+                        log.info(f'\tSkipping {obsmode}')
 
                     break
-                elif e.message == 'math domain error':
+                elif 'math domain error' in str(e):
                     skip = True
                     skipped_obs.append(obsmode)
 
                     if verbose:
-                        log.info('\tSkipping {0}'.format(obsmode))
+                        log.info(f'\tSkipping {obsmode0}')
 
                     flam_datacol_vals.pop(nr)
                     plam_datacol_vals.pop(nr)
@@ -571,8 +534,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
                     raise
 
             if verbose:
-                log.info('\tPHOTFLAM({0}) = {1}'.format(
-                        fullmode, value['PHOTFLAM']))
+                log.info(f"\tPHOTFLAM({fullmode}) = {value['PHOTFLAM']}")
 
             pflam[n] = value['PHOTFLAM']
             pplam[n] = value['PHOTPLAM']
@@ -659,10 +621,9 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         bw_cols.append(bvals)
 
     ped_vals = [fits.getval(tmctab, 'pedigree', 0)] * len(nmode_vals)
-    descrip_str = (
-        'Generated {0} from {1}, mkimphttab version {2}, '
-        'pysynphot version {3}'.format(
-            get_date(), os.path.basename(tmgtab), __version__, S.__version__))
+    descrip_str = (f'Generated {get_date()} from {os.path.basename(tmgtab)}, '
+                   f'mkimphttab version {__version__}, '
+                   f'pysynphot version {S.__version__}')
     descrip_vals = [descrip_str] * len(nmode_vals)
 
     # Finally, create structures needed to define this row in the FITS table
@@ -684,19 +645,19 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     parvals_tabcols = list()
     nelem_tabcols = list()
     parnames_tabcols = list()
-    parnames_format = str(fpars_sz) + "A"
+    parnames_format = str(fpars_sz) + 'A'
 
     # for each parameterized element, create a set of columns specifying the
     # range of values for that parameter and the number of elements covering
     # that range namely, the PAR<n>VALUES and NELEM<n> columns
     for p in range(max_npars):
+        pp1 = p + 1
         nelem_tabcols.append(fits.Column(
-            name="NELEM"+str(p+1), format="I", array=nelem_cols[p]))
+            name=f'NELEM{pp1}', format='I', array=nelem_cols[p]))
         parvals_tabcols.append(fits.Column(
-            name="PAR"+str(p+1)+"VALUES", format="PD()",
-            array=parvals_cols[p]))
+            name=f'PAR{pp1}VALUES', format="PD()", array=parvals_cols[p]))
         parnames_tabcols.append(fits.Column(
-            name="PAR"+str(p+1)+"NAMES", format=parnames_format,
+            name=f'PAR{pp1}NAMES', format=parnames_format,
             array=parnames_cols[p]))
 
     # create the set of results columns
@@ -718,14 +679,14 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
             bcols = bw_cols[p]
 
         flam_tabcols.append(fits.Column(
-            name='PHOTFLAM'+pstr, format=format_str, array=fcols))
+            name=f'PHOTFLAM{pstr}', format=format_str, array=fcols))
         plam_tabcols.append(fits.Column(
-            name='PHOTPLAM'+pstr, format=format_str, array=pcols))
+            name=f'PHOTPLAM{pstr}', format=format_str, array=pcols))
         bw_tabcols.append(fits.Column(
-            name='PHOTBW'+pstr, format=format_str, array=bcols))
+            name=f'PHOTBW{pstr}', format=format_str, array=bcols))
 
     # Now create the FITS file with the table in each extension
-    log.info('Creating full table: {0}'.format(output))
+    log.info(f'Creating full table: {output}')
 
     phdu = make_pri_hdu(output, max_npars, basemode.split(',')[0], detector,
                         ped_vals[0], useafter)
@@ -819,7 +780,7 @@ def create_table_from_table(output, useafter, imphttab, **kwargs):
     # if there are more than 3 extensions assume they are static and
     # append them to the output file
     if extra_exten:
-        junkfile = tempfile.NamedTemporaryFile(dir='./', delete=False)
+        junkfile = tempfile.NamedTemporaryFile(dir=os.curdir, delete=False)
         print("Adding static extensions to output", extra_exten)
         with fits.open(imphttab) as imp:
             with fits.open(output) as outfile:
