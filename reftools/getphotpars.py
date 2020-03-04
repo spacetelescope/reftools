@@ -21,7 +21,7 @@ best to use the `GetPhotPars` class. For example::
 # is the name of the extension (as already is the practice). This is done
 # to accommodate new WFC3 tables with 5 extensions
 #
-# Right now, the only values that PySynphot computes are
+# Right now, the only values that stsynphot computes are
 # PHOTFLAM, PHOTPLAM, and PHOTBW.
 
 import numpy as np

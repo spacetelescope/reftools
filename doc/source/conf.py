@@ -233,5 +233,6 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('https://matplotlib.org/', None),
     'astropy': ('https://docs.astropy.org/en/stable/', None),
-    'pysynphot': ('https://pysynphot.readthedocs.io/en/stable/', None)
+    'synphot': ('https://synphot.readthedocs.io/en/latest/', None),
+    'stsynphot': ('https://stsynphot.readthedocs.io/en/latest/', None)
     }
