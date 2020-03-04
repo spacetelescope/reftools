@@ -4,11 +4,6 @@ a recursion functionality for generating all possible obsmodes
 supported by the table.
 
 """
-from __future__ import absolute_import, print_function, division
-
-# STDLIB
-import sys
-
 # ASTROPY
 from astropy import log
 from astropy.io import fits
@@ -137,7 +132,7 @@ class ObsmodeError(BaseException):
     pass
 
 
-class Node(object):
+class Node:
     """A Node correspondes to a graph table 'innode'.
     Nodes are attached to each other by Edges.
 
@@ -149,19 +144,15 @@ class Node(object):
         self.edgeset = set()
 
     def __iter__(self):
-        if sys.version_info[0] < 3:
-            iterator = self.edges.values().__iter__()
-        else:
-            iterator = iter(self.edges.values())
-        return iterator
+        return iter(self.edges.values())
 
     def __str__(self):
         return str(self.name)
 
     def add_edge(self, edge):
-        #The dict is used to select edge based on kwd
+        # The dict is used to select edge based on kwd
         self.edges[edge.kwd] = edge
-        #The set is used for fast matching in .select_edge()
+        # The set is used for fast matching in .select_edge()
         self.edgeset.add(edge.kwd)
 
     def select_edge(self, kwdset, partial=False, count=0):
@@ -171,32 +162,34 @@ class Node(object):
         # "acs,hrc,f555w" -> set(["acs","hrc","f555w"])
         match = self.edgeset & kwdset
         if len(match) > 1:
-            log.info("Found match of {0}".format(match))
-            raise ValueError("Ambiguous...Too many edges match. Check for problems with graph table.")
+            log.info(f'Found match of {match}')
+            raise ValueError('Ambiguous...Too many edges match. '
+                             'Check for problems with graph table.')
         elif len(match) == 1:
             ans = self.edges[match.pop()]
         else:
             # pick up the default if there is one
             if 'default' in self.edges:
                 if not partial or (partial and count < len(kwdset)):
-                    #consider 'default' -> None
+                    # consider 'default' -> None
                     ans = self.edges['default']
                 else:
-                    # define Edge object to serve as sentinal to mark the end of this path
-                    ans = Edge('default',[None,None,None,None],None)
+                    # define Edge object to serve as sentinal to mark the
+                    # end of this path
+                    ans = Edge('default', [None, None, None, None], None)
             else:
                 # An example of this case would be kwdset=['acs'] yet
                 # the only edges for continuing are ['wfc2','sbc','wfc1','hrc']
-                #raise KeyError("No match, bla bla")
-                log.info("No match... Multiple edges but no default.")
-                # define Edge object to serve as sentinal to mark the end of this path
-                ans = Edge('default',[None,None,None,None],None)
+                log.info('No match... Multiple edges but no default.')
+                # define Edge object to serve as sentinal to mark the end
+                # of this path
+                ans = Edge('default', [None, None, None, None], None)
         return ans
 
 
-class Edge(object):
-    """An Edge connects a pair of nodes. An Edge
-    contains a keyword, compname, and thcompname.
+class Edge:
+    """An Edge connects a pair of nodes.
+    An Edge contains a keyword, compname, and thcompname.
     """
     def __init__(self, kwd, contents, outnode):
         self.kwd = kwd
@@ -204,10 +197,9 @@ class Edge(object):
         self.destination = outnode
 
 
-class Path(object):
+class Path:
     """A Path is produced by traversing a Graph.
-    It contains a list of edges and has some convenience
-    methods.
+    It contains a list of edges and has some convenience methods.
 
     """
     def __init__(self, obsmode, params=None):
@@ -219,8 +211,7 @@ class Path(object):
     def append(self, edge):
         self._edgelist.append(edge)
         parvalues = []
-        parname = edge.filename
-        if edge.pvar in self._params and edge.pvar not in [None,'', ' ']:
+        if edge.pvar in self._params and edge.pvar not in [None, '', ' ']:
             # Get throughput file for component
             with fits.open(edge.filename) as f:
                 cnames = f[1].data.names[1:]
@@ -234,14 +225,11 @@ class Path(object):
 
     def compnames(self):
         """Return list of optical compnames"""
-        ans = [e.optical for e in self._edgelist if e.optical is not None]
-        return ans
+        return [e.optical for e in self._edgelist if e.optical is not None]
 
 
-class Graph(object):
-    """A Graph is the data structure that corresponds to
-    the graph table.
-    """
+class Graph:
+    """A Graph is the data structure that corresponds to the graph table."""
     def __init__(self, nodes=None, name=None):
         # fundamental contents
         self.nodes = dict()
@@ -276,55 +264,64 @@ class Graph(object):
     def get(self, nodename, default=None):
         return self.nodes.get(nodename, default)
 
-    def traverse(self, obsmode, verbose=True,partial=False):
-        """This is the usual way to traverse a graph
-        table. obsmode_str is a comma-separated obsmode
-        string, such as 'acs, hrc, f555w'.
+    def traverse(self, obsmode, verbose=True, partial=False):
+        """This is the usual way to traverse a graph table.
 
-        If 'partial' == True, logic will be followed to identify the
-        point at which all components of the partial obsmode provided as input
-        are found to match at least 1 keyword.
+        Parameters
+        ----------
+        obsmode : str
+            Comma-separated obsmode string, such as ``'acs, hrc, f555w'``.
+
+        verbose : bool
+            Log extra info.
+
+        partial : bool
+            If `True`, logic will be followed to identify the point at which
+            all components of the partial obsmode provided as input are found
+            to match at least 1 keyword.
 
         """
-        #counter for sanity check
-        count=0
+        # counter for sanity check
+        count = 0
         # counter for number of obsmode elements found in graphtab
         kwdcount = 0
 
-        #Turn obsmode into a keyword set
+        # Turn obsmode into a keyword set
         kwdset = set(obsmode.split(','))
 
-        #Handle parameterized kwds here
-        plist = [k for k in kwdset if '#' in k]
+        # Handle parameterized kwds here
         params = dict()
-        for p in plist:
+        for p in list(kwdset):
+            if '#' not in p:
+                continue
             kwdset.remove(p)
-            k,v = p.split('#')
+            k, v = p.split('#')
             k += '#'  # needed to match syntax used in graphtab
-            params[k.upper()] = v #floated?, always use uppercase for matching
+            params[k.upper()] = v  # always use uppercase for matching
             kwdset.add(k)
 
-        #Path to accumulate answers
+        # Path to accumulate answers
         ans = Path(obsmode, params=params)
 
-        #Start at the top of the tree
+        # Start at the top of the tree
         innode = self[self.top.name]
         if verbose:
-            log.info("Starting: {0}".format(innode.name))
+            log.info(f'Starting: {innode.name}')
 
-        edge_list=[]
+        edge_list = []
 
         while ((innode is not None) and (count <= len(self))):
             # Choose edge based on obsmode
             try:
-                edge = innode.select_edge(kwdset,partial=partial,count=kwdcount)
+                edge = innode.select_edge(
+                    kwdset, partial=partial, count=kwdcount)
             except KeyError:
                 # came to the end of the obsmode in the middle of the graph
                 break
             ans.append(edge)
 
             if verbose:
-                log.info("->".join([str(innode), str(edge.kwd),
+                log.info('->'.join([str(innode), str(edge.kwd),
                                     str(edge.destination)]))
 
             if 'acs' in obsmode or 'wfc3' in obsmode:
@@ -350,25 +347,23 @@ class Graph(object):
 
             # Set up for passing through this node to the next
             innode = edge.destination
-            count+=1
+            count += 1
 
         return ans
 
     def get_obsmodes(self, obsmode, prefix=False):
-        """UI to the recursive process of obtaining
-        all obsmodes in the graph. First calls the
-        recurse method, then calls a post-processor
+        """Obtain all obsmodes in the graph.
+
+        First calls the recurse method, then calls a post-processor
         to remove Nones and duplicates.
 
-        If no value is provided for `offset`, then
-        it will start at the offset used to
-        read in the graph. If a string is provided
-        as the value for `offset`, then .traverse().offset
-        will be determined and used.
+        If no value is provided for ``offset``, then it will start at the
+        offset used to read in the graph. If a string is provided as the value
+        for ``offset``, then ``.traverse().offset`` will be determined
+        and used.
 
-        The returned obsmode strings will contain the
-        full obsmode if a string is provided for `offset`
-        and `prefix`=True.
+        The returned obsmode strings will contain the full obsmode if a string
+        is provided for ``offset`` and ``prefix=True``.
 
         """
         self.obsmode = obsmode
@@ -381,28 +376,27 @@ class Graph(object):
         elif obsmode + ',*' in rules_dict.keys():
             self.obsrules_key = obsmode + ',*'
         else:
-            raise ObsmodeError('Unsupported obsmode string: ' +
-                                str(obsmode))
+            raise ObsmodeError(f'Unsupported obsmode string: {str(obsmode)}')
 
-        self.obsrules_junk = rules_dict['default']['junk'] + \
-                             rules_dict[self.obsrules_key]['junk']
-        self.obsrules_excl = rules_dict['default']['exclude'] + \
-                             rules_dict[self.obsrules_key]['exclude']
+        self.obsrules_junk = (rules_dict['default']['junk'] +
+                              rules_dict[self.obsrules_key]['junk'])
+        self.obsrules_excl = (rules_dict['default']['exclude'] +
+                              rules_dict[self.obsrules_key]['exclude'])
 
         # make sure the given obsmode string doesn't contain anything excluded
         for o in obsmode.split(','):
             if o in self.obsrules_excl:
                 raise ObsmodeError('Entered obsmode includes excluded '
-                                    'parameters: ' + str(obsmode))
+                                   f'parameters: {str(obsmode)}')
 
         instrmode = None
 
         if isinstance(obsmode, str):
             if prefix:
-                instrmode=obsmode
+                instrmode = obsmode
             offset = self.traverse(obsmode, verbose=False, partial=False).offset
 
-        log.info('Start at offset: {0}'.format(offset))
+        log.info(f'Start at offset: {offset}')
 
         startnode = self[offset]
         # build up raw list of all possible obsmodes
@@ -414,50 +408,39 @@ class Graph(object):
         return self.obsmodes
 
     def process(self, prefix=None, remove_junk=False):
-      """Remove 'default' strings and put on the prefix, if supplied."""
+        """Remove ``'default'`` strings and put on the prefix, if supplied."""
 
-      # convert to a numpy array so we can use fast vectorized functions
-      self.obsmodes = np.array(self.obsmodes, dtype=np.str)
+        # convert to a numpy array so we can use fast vectorized functions
+        self.obsmodes = np.asarray(self.obsmodes, dtype=np.str)
 
-      # remove junk
-      if remove_junk:
-          for junk in self.obsrules_junk:
-              if junk == '':
-                  j = ',,'
-                  r = ','
-                  self.obsmodes = np.char.replace(self.obsmodes, j, r)
-              else:
-                  j1 = ',' + junk
-                  j2 = junk + ','
-                  j3 = junk
-                  r = ''
+        if remove_junk:
+            for junk in self.obsrules_junk:
+                if junk == '':
+                    self.obsmodes = np.char.replace(self.obsmodes, ',,', ',')
+                else:
+                    for j in (',' + junk, junk + ',', junk):
+                        self.obsmodes = np.char.replace(self.obsmodes, j, '')
 
-                  self.obsmodes = np.char.replace(self.obsmodes, j1, r)
-                  self.obsmodes = np.char.replace(self.obsmodes, j2, r)
-                  self.obsmodes = np.char.replace(self.obsmodes, j3, r)
+        # SPECIAL FOR WFC3,UVIS
+        # because of graph table shenanigans it easiest to generate a list
+        # of obsmodes that don't include the cal keyword and then duplicate
+        # that list and append "cal" to the duplicates
+        if 'wfc3,uvis' in self.obsmode.lower():
+            calmodes = self.obsmodes.copy()
+            calmodes = np.char.add(calmodes, ',cal')
+            self.obsmodes = np.array(
+                self.obsmodes.tolist() + calmodes.tolist(), dtype=np.str)
 
-      #self.obsmodes = np.unique(self.obsmodes)
+        # add prefix (or not) and convert back to list
+        if prefix is not None:
+            self.obsmodes = np.char.add(prefix, self.obsmodes).tolist()
 
-      # SPECIAL FOR WFC3,UVIS
-      # because of graph table shenanigans it easiest to generate a list
-      # of obsmodes that don't include the cal keyword and then duplicate
-      # that list and append "cal" to the duplicates
-      if 'wfc3,uvis' in self.obsmode.lower():
-          calmodes = self.obsmodes.copy()
-          calmodes = np.char.add(calmodes,',cal')
-          self.obsmodes = np.array(self.obsmodes.tolist() + calmodes.tolist(),
-                                   dtype=np.str)
+            # remove trailing comma if necessary
+            if self.obsmodes[0][:-1] == prefix:
+                self.obsmodes[0] = prefix
 
-      # add prefix (or not) and convert back to list
-      if prefix is not None:
-          self.obsmodes = np.char.add(prefix,self.obsmodes).tolist()
-
-          # remove trailing comma if necessary
-          if self.obsmodes[0][:-1] == prefix:
-              self.obsmodes[0] = prefix
-
-      else:
-          self.obsmodes = np.char.replace(self.obsmodes,',','',1).tolist()
+        else:
+            self.obsmodes = np.char.replace(self.obsmodes, ',', '', 1).tolist()
 
     def read_rules(self, fname):
         # read the data file
@@ -468,15 +451,16 @@ class Graph(object):
         datastr = datastr.replace('\r', '')
 
         # try to eval the data
-        try :
+        try:
+            # TODO: Use ast.literal_eval(datastr) ?
             datadict = eval(datastr)
         except Exception as e:
-            log.error('{0}\ncannot eval data in file {1}'.format(str(e), fname))
+            log.error(f'{repr(e)}\ncannot eval data in file {fname}')
             raise
 
         return datadict
 
-    def recurse(self, node, so_far=None):
+    def recurse(self, node, so_far=''):
         """This is the method that can be used to
         generate all possible obsmodes from a table
         (starting either from the root or from a
@@ -486,18 +470,13 @@ class Graph(object):
         must be processed to remove junk.
         """
         result = list()
-        r=list()
 
-        #This is syntactic sugar
-        if so_far is None:
-            so_far = ''
-
-        #This terminates the recursion
+        # This terminates the recursion
         if node is None:
             result.append(so_far)
 
         else:
-            #Recurse through all the edges of this node
+            # Recurse through all the edges of this node
             for edge in node:
                 if edge.kwd.lower() in self.obsrules_excl:
                     continue
@@ -505,25 +484,25 @@ class Graph(object):
                 # wfpc2 obsmodes may have at most 2 filters,
                 # including polarized filters
                 if ('wfpc2' in self.obsmode.lower() and
-                    (edge.kwd.lower()[0] == 'f' or
-                     edge.kwd.lower()[:3] == 'pol')):
-                  num_filt = 0
-                  for mode in so_far.split(','):
-                      if (mode not in ['', 'default'] and
-                             (mode.lower()[0] == 'f' or
-                              mode.lower()[:3] == 'pol')):
-                          num_filt += 1
-                  if num_filt >= 2:
-                      continue
+                        (edge.kwd.lower()[0] == 'f' or
+                         edge.kwd.lower()[:3] == 'pol')):
+                    num_filt = 0
+                    for mode in so_far.split(','):
+                        if (mode not in ['', 'default'] and
+                                (mode.lower()[0] == 'f' or
+                                 mode.lower()[:3] == 'pol')):
+                            num_filt += 1
+                    if num_filt >= 2:
+                        continue
 
                 if edge.kwd not in self.obsrules_junk:
-                    further = so_far + "," + edge.kwd
+                    further = so_far + ',' + edge.kwd
                 else:
                     further = so_far
 
-                ans = self.recurse(edge.destination,further)
+                ans = self.recurse(edge.destination, further)
 
-                #Collect the answers for each edge
+                # Collect the answers for each edge
                 result.extend(ans)
 
         return result

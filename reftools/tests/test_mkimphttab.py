@@ -1,30 +1,23 @@
-import os
-import tempfile
+import pytest
+pytest.importorskip('pysynphot')
 
-from .. import mkimphttab
+from astropy import log  # noqa
+from astropy.io.fits.verify import VerifyWarning  # noqa
+
+from .. import mkimphttab  # noqa
 
 
-# make sure that when making an imphttab there are no errors
-def test_mkimphttab():
-  tempdir = tempfile.gettempdir()
+def setup_module():
+    # Do not spam pytest log
+    log.setLevel('ERROR')
 
-  output = os.path.join(tempdir, 'test_out_imp.fits')
 
-  base_mode = 'acs,sbc'
+def teardown_module():
+    log.setLevel('INFO')
 
-  useafter='DUMMY'
 
-  detector='sbc'
-
-  try:
-    mkimphttab.create_table(output, base_mode, detector, useafter)
-
-  except:
-    if os.path.exists(output):
-      os.remove(output)
-
-    raise
-
-  else:
-    assert os.path.exists(output)
-    os.remove(output)
+def test_mkimphttab(tmpdir):
+    """Make sure that when making IMPHTTAB, there are no errors."""
+    output = str(tmpdir.join('test_out_imp.fits'))
+    with pytest.warns(VerifyWarning, match='comment will be truncated'):
+        mkimphttab.create_table(output, 'acs,sbc', 'sbc', 'DUMMY')
