@@ -18,7 +18,8 @@ enable_deprecations_as_exceptions()
 # from the list of packages for which version numbers are displayed
 # when running the tests.
 PYTEST_HEADER_MODULES['Astropy'] = 'astropy'
-PYTEST_HEADER_MODULES['PySynphot'] = 'pysynphot'
+PYTEST_HEADER_MODULES['synphot'] = 'synphot'
+PYTEST_HEADER_MODULES['stsynphot'] = 'stsynphot'
 PYTEST_HEADER_MODULES.pop('Pandas')
 PYTEST_HEADER_MODULES.pop('h5py')
 

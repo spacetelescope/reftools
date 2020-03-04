@@ -1,6 +1,7 @@
 2.0.0 (unreleased)
 ==================
 
+* IMPHTTAB generation now uses ``stsynphot``, not PySynphot. [#33]
 * Compatibility with ``astropy`` 4.0. [#31]
 * Dropped Python 2 support. Minimum supported Python version is 3.6. [#31]
 * Dropped TEAL support for ``tdspysyn``. [#31]

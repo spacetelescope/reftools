@@ -29,8 +29,7 @@ def read_graphtable(fname, tmcfile=None, tmtfile=None, offset=0,
     at which you want the resulting Graph to start.
 
     """
-    # PYSYNPHOT
-    from pysynphot.locations import irafconvert
+    from stsynphot.stio import irafconvert
 
     fname = irafconvert(fname)
     if tmcfile is not None:

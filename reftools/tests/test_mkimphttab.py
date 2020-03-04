@@ -1,5 +1,5 @@
 import pytest
-pytest.importorskip('pysynphot')
+pytest.importorskip('stsynphot')
 
 from astropy import log  # noqa
 from astropy.io.fits.verify import VerifyWarning  # noqa

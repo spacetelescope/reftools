@@ -1,8 +1,8 @@
 #! /usr/bin/env python
-"""Convert a COS or STIS TDS file to PySynphot throughput files.
+"""Convert a COS or STIS TDS file to ``stsynphot`` throughput files.
 
 This program reads a time-dependent sensitivity (TDS) file for either
-COS or STIS and writes one throughput table in PySynphot format for each
+COS or STIS and writes one throughput table in ``stsynphot`` format for each
 input row.
 
 .. note::
@@ -45,15 +45,15 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog=__taskname__,
-        description='Convert a COS or STIS TDS file to PySynphot throughput files.')  # noqa
+        description='Convert a COS or STIS TDS file to stsynphot throughput files.')  # noqa
     parser.add_argument('input', type=str, help='Input TDS file name')
     parser.add_argument('outroot', type=str, help='Prefix for output names')
     parser.add_argument('min_wl', type=float,
-                        help='Minimum wavelength for PySynphot files')
+                        help='Minimum wavelength for stsynphot files')
     parser.add_argument('max_wl', type=float,
-                        help='Maximum wavelength for PySynphot files')
+                        help='Maximum wavelength for stsynphot files')
     parser.add_argument('dwl', type=float,
-                        help='Wavelength increment for PySynphot files')
+                        help='Wavelength increment for stsynphot files')
     parser.add_argument('thru_mjd', type=float,
                         help='Time (MJD) for THROUGHPUT column')
     parser.add_argument('last_mjd', type=float, default=None, help='Last MJD')
@@ -70,7 +70,7 @@ def main():
 
 def tdsToPysynphot(input, outroot, min_wl, max_wl, dwl, thru_mjd,
                    last_mjd=None, row=None):
-    """Convert a TDS table to PySynphot format.
+    """Convert a TDS table to ``stsynphot`` format.
 
     Parameters
     ----------
@@ -78,7 +78,7 @@ def tdsToPysynphot(input, outroot, min_wl, max_wl, dwl, thru_mjd,
         The name of the input TDS table.
 
     outroot : str
-        A root name for constructing the name(s) of the output PySynphot
+        A root name for constructing the name(s) of the output ``stsynphot``
         file(s). For COS data, the full file name will be ``outroot`` plus
         the grating name, the segment or stripe name, the aperture name,
         and ``.fits``.  The grating, segment, and aperture names will be in
@@ -88,19 +88,19 @@ def tdsToPysynphot(input, outroot, min_wl, max_wl, dwl, thru_mjd,
 
     min_wl : float
         The minimum wavelength (Angstroms) for the WAVELENGTH column in
-        the output PySynphot table.
+        the output ``stsynphot`` table.
 
     max_wl : float
         The maximum wavelength (Angstroms) for the WAVELENGTH column in
-        the output PySynphot table.
+        the output ``stsynphot`` table.
 
     dwl : float
         The increment (Angstroms) from row to row in the WAVELENGTH column
-        in the output PySynphot table.
+        in the output ``stsynphot`` table.
 
     thru_mjd : float
         The time (MJD) to use for the THROUGHPUT column.  This column
-        contains the default throughput values that PySynphot will use
+        contains the default throughput values that ``stsynphot`` will use
         if no date was specified.
         This is the one time value that will not be rounded to an int.
 
@@ -111,9 +111,9 @@ def tdsToPysynphot(input, outroot, min_wl, max_wl, dwl, thru_mjd,
         far enough in the future.
 
     row : int or `None`
-        If a row number (1-indexed) was specified, a PySynphot table
+        If a row number (1-indexed) was specified, a ``stsynphot`` table
         will be written for just that one row of the input TDS table.
-        If `None` (the default), a PySynphot table will be written
+        If `None` (the default), a ``stsynphot`` table will be written
         for each row of the TDS table.
 
     """
@@ -140,24 +140,24 @@ def initTds(input, outroot, min_wl, max_wl, dwl, thru_mjd, last_mjd, row):
         The name of the input TDS table.
 
     outroot : str
-        A root name for constructing the name(s) of the output PySynphot
+        A root name for constructing the name(s) of the output ``stsynphot``
         file(s).
 
     min_wl : float
         The minimum wavelength (Angstroms) for the WAVELENGTH column in
-        the output PySynphot table.
+        the output ``stsynphot`` table.
 
     max_wl : float
         The maximum wavelength (Angstroms) for the WAVELENGTH column in
-        the output PySynphot table.
+        the output ``stsynphot`` table.
 
     dwl : float
         The increment (Angstroms) from row to row in the WAVELENGTH column
-        in the output PySynphot table.
+        in the output ``stsynphot`` table.
 
     thru_mjd : float
         The time (MJD) to use for the THROUGHPUT column. This column
-        contains the default throughput values that PySynphot will use
+        contains the default throughput values that ``stsynphot`` will use
         if no date was specified.
 
     last_mjd : float or `None`
@@ -166,7 +166,7 @@ def initTds(input, outroot, min_wl, max_wl, dwl, thru_mjd, last_mjd, row):
 
     row : int or `None`
         Row number (0-indexed) to read from the input TDS table, or `None`
-        if a PySynphot table for each TDS table row should be written.
+        if a ``stsynphot`` table for each TDS table row should be written.
 
     """
     with fits.open(expandFilename(input)) as ifd:
@@ -323,7 +323,7 @@ class ConvertTds:
             nt_pysyn = nt_tds + 1
         else:
             nt_pysyn = nt_tds + 2
-        time = np.zeros(nt_pysyn, dtype=np.float64)    # for PySynphot table
+        time = np.zeros(nt_pysyn, dtype=np.float64)    # for stsynphot table
 
         # NOTE: round the MJD values to the nearest integer
         time[0] = round(self.useafter_mjd)
@@ -348,18 +348,18 @@ class ConvertTds:
         return time[0:nelem]
 
     def getWavelengths(self, min_wl, max_wl, dwl):
-        """Create the array of wavelengths for the PySynphot table.
+        """Create the array of wavelengths for the ``stsynphot`` table.
 
         Parameters
         ----------
         min_wl : float
-            Minimum wavelength (Angstroms) for PySynphot table.
+            Minimum wavelength (Angstroms) for ``stsynphot`` table.
 
         max_wl : float
-            Maximum wavelength (Angstroms) for PySynphot table.
+            Maximum wavelength (Angstroms) for ``stsynphot`` table.
 
         dwl : float
-            Wavelength increment (Angstroms) for PySynphot table.
+            Wavelength increment (Angstroms) for ``stsynphot`` table.
 
         Returns
         -------
@@ -429,7 +429,7 @@ class ConvertTds:
             Current row number (0-indexed) in input TDS table.
 
         """
-        wavelength = hdu.data.field('wavelength')      # PySynphot table
+        wavelength = hdu.data.field('wavelength')      # stsynphot table
 
         colname = 'THROUGHPUT'
         thru = hdu.data.field(colname)
@@ -446,7 +446,7 @@ class ConvertTds:
                 thru[:] = self.interpTdsFactors(row, time[i], wavelength)
 
     def createFile(self, hdu, row, overwrite=False):
-        """Create the PySynphot file.
+        """Create the ``stsynphot`` file.
 
         This creates a pyfits HDUList object using the primary header/data
         unit from the input TDS table, appends ``hdu``, then writes the
@@ -455,7 +455,7 @@ class ConvertTds:
         Parameters
         ----------
         hdu : `astropy.io.fits.BinTableHDU`
-            Header/data unit for the PySynphot table.
+            Header/data unit for the ``stsynphot`` table.
 
         row : int
             Current row number (0-indexed) in input TDS table. This is
@@ -574,7 +574,7 @@ class CosTds(ConvertTds):
                                'from the table header.')
 
     def makeFilename(self, row):
-        """Create a name for the output COS PySynphot file.
+        """Create a name for the output COS ``stsynphot`` file.
 
         The file name will be the root that was specified by the user,
         then the values of OPT_ELEM, SEGMENT, and APERTURE from ``row`` in
@@ -605,7 +605,7 @@ class CosTds(ConvertTds):
             Modified Julian Date.
 
         wavelength : array_like
-            Array of wavelengths for the PySynphot table (float64).
+            Array of wavelengths for the ``stsynphot`` table (float64).
 
         Returns
         -------
@@ -670,7 +670,7 @@ class StisTds(ConvertTds):
     """Class to handle STIS TDS."""
 
     def makeFilename(self, row):
-        """Create a name for the output STIS PySynphot file.
+        """Create a name for the output STIS ``stsynphot`` file.
 
         The file name will be the root that was specified by the user, then
         ``_`` and the value of OPT_ELEM (converted to lower case) from ``row``
@@ -698,7 +698,7 @@ class StisTds(ConvertTds):
             Modified Julian Date.
 
         wavelength : array_like
-            Array of wavelengths for the PySynphot table (float64).
+            Array of wavelengths for the ``stsynphot`` table (float64).
 
         Returns
         -------

@@ -17,13 +17,13 @@ from astropy.io import fits
 from . import graphfile as sgf
 
 __all__ = ['create_table', 'create_nicmos_table', 'create_table_from_table']
-__version__ = '0.5.1'
-__vdate__ = '02-Aug-2016'
+__version__ = '0.6'
+__vdate__ = '04-Mar-2020'
 
 
 def compute_values(obsmode, component_dict):
     """Compute the 3 basic photometric values needed for a given
-    observation mode string using `pysynphot`.
+    observation mode string using ``stsynphot``.
 
     Values calculated:
 
@@ -46,17 +46,20 @@ def compute_values(obsmode, component_dict):
         Dictionary with photometry keywords as keys.
 
     """
-    import pysynphot as S
+    import stsynphot as stsyn
 
     # Define the bandpass for this obsmode
-    bp = S.ObsBandpass(obsmode, component_dict=component_dict)
+    bp = stsyn.band(obsmode, component_dict=component_dict)
 
     # compute the photometric values
-    uresp = bp.unit_response()
+    uresp = bp.unit_response(bp.area).value
+    pivot = bp.pivot().value
+    photbw = bp.photbw().value
+
     if not np.isfinite(uresp):
         uresp = 0.0
 
-    return {'PHOTFLAM': uresp, 'PHOTPLAM': bp.pivot(), 'PHOTBW': bp.photbw()}
+    return {'PHOTFLAM': uresp, 'PHOTPLAM': pivot, 'PHOTBW': photbw}
 
 
 def expand_obsmodes(basemode, pardict):
@@ -217,10 +220,9 @@ def make_pri_hdu(filename, numpars, instrument, detector, pedigree, useafter):
         Useafter date in the format of ``MMM DD YYYY HH:MM:SS``.
 
     """
-    import pysynphot as S
-    from pysynphot import refs
+    import stsynphot as stsyn
 
-    d = refs.getref()
+    d = stsyn.getref()
     phdu = fits.PrimaryHDU()
 
     phdu.header['DATE'] = (get_date(), 'Date FITS file was generated')
@@ -234,7 +236,7 @@ def make_pri_hdu(filename, numpars, instrument, detector, pedigree, useafter):
     phdu.header['DBTABLE'] = ('IMPHTTAB', 'Database table')
     phdu.header['INSTRUME'] = (instrument, 'Instrument name')
     phdu.header['DETECTOR'] = (detector, 'Detector name')
-    phdu.header['SYNSWVER'] = (S.__version__,
+    phdu.header['SYNSWVER'] = (stsyn.__version__,
                                'Version of synthetic photometry software')
     phdu.header['MKTABVER'] = (__version__, 'Version of reftools.mkimphttab')
     phdu.header['GRAPHTAB'] = (os.path.basename(d['graphtable']),
@@ -318,8 +320,12 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
 
 
     """
-    import pysynphot as S
-    from pysynphot import refs
+    import stsynphot as stsyn
+    from stsynphot import conf as stsyn_conf
+
+    synname = 'stsynphot'
+    synver = stsyn.__version__
+    d = stsyn.getref()
 
     if not output.endswith('_imp.fits'):
         output = output + '_imp.fits'
@@ -331,13 +337,15 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
 
     # Define graph and component tables.
     if tmgtab is None:
-        tmgtab = refs.GRAPHTABLE
+        tmgtab = d['graphtable']
     if tmctab is None:
-        tmctab = refs.COMPTABLE
+        tmctab = d['comptable']
     if tmttab is None:
-        tmttab = refs.THERMTABLE
+        tmttab = d['thermtable']
 
-    refs.setref(graphtable=tmgtab, comptable=tmctab, thermtable=tmttab)
+    stsyn_conf.graphtable = tmgtab
+    stsyn_conf.comptable = tmctab
+    stsyn_conf.thermtable = tmttab
     x = sgf.read_graphtable(tmgtab, tmctab, tmttab)
 
     if len(mode_list) == 0:
@@ -370,7 +378,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
         npars = len(fpars)
         npar_vals.append(npars)
         fpars_vals.append(fpars)
-        fpars_len = [len(f) for f in fpars]
+        fpars_len = list(map(len, fpars))
 
         if len(fpars_len) == 0:
             fpars_max = 0
@@ -452,7 +460,6 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     nmode_vals = list()
 
     # dictionary to hold optical components
-    # (pysynphot.observationmode._Component objects)
     component_dict = {}
 
     # list to hold skipped obsmodes
@@ -623,7 +630,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
     ped_vals = [fits.getval(tmctab, 'pedigree', 0)] * len(nmode_vals)
     descrip_str = (f'Generated {get_date()} from {os.path.basename(tmgtab)}, '
                    f'mkimphttab version {__version__}, '
-                   f'pysynphot version {S.__version__}')
+                   f'{synname} version {synver}')
     descrip_vals = [descrip_str] * len(nmode_vals)
 
     # Finally, create structures needed to define this row in the FITS table
