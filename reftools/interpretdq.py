@@ -49,6 +49,10 @@ uint16        str9            str74
 >>> acsdq.data[169, 1456]  # doctest: +SKIP
 1072
 
+This is the same as above, except pixel is given as 0-indexed values:
+
+>>> acsdq.interpret_pixel(1456, 169, origin=0)  # doctest: +SKIP
+
 Interpret DQ values for all pixels. Then, extract mask for interpreted
 DQ value of 16 (hot pixel) and display pixel values for that mask:
 
@@ -376,14 +380,18 @@ class ImageDQ:
                 dqparser = DQParser.from_instrument(instrument)
         return cls(data, dqparser=dqparser)
 
-    def interpret_pixel(self, x, y):
+    def interpret_pixel(self, x, y, origin=1):
         """Construct a user-friendly table object with interpreted
-        DQ values for a given pixel location (in IRAF format).
+        DQ values for a given pixel location.
 
         Parameters
         ----------
         x, y : int
-            IRAF X and Y pixel coordinates.
+            X and Y pixel coordinates. Also see ``origin``.
+
+        origin : {0, 1}
+            Indexing system for the pixel values given. Use 0 for
+            Python 0-indexed system and 1 for IRAF 1-indexed system.
 
         Returns
         -------
@@ -392,7 +400,9 @@ class ImageDQ:
             their meanings.
 
         """
-        return self.parser.interpret_dqval(self.data[y - 1, x - 1])
+        if origin not in (0, 1):
+            raise ValueError('origin must be 0 or 1')
+        return self.parser.interpret_dqval(self.data[y - origin, x - origin])
 
     # This is not done in init because might be resource intensive.
     def interpret_all(self, verbose=True):
@@ -447,21 +457,29 @@ class ImageDQ:
 
         return mask
 
-    def pixlist(self):
-        """Convert cached results from Python indices to list of
-        IRAF-style ``(X, Y)`` pixel coordinates.
+    def pixlist(self, origin=1):
+        """Convert cached results to a list of ``(X, Y)`` pixel coordinates.
+
+        Parameters
+        ----------
+        origin : {0, 1}
+            Indexing system for the pixel values returned. Use 0 for
+            Python 0-indexed system and 1 for IRAF 1-indexed system.
 
         Returns
         -------
         pixlist_by_flag : dict
             Dictionary mapping each interpreted DQ value to a list
-            of IRAF coordinates.
+            of coordinates.
 
         """
+        if origin not in (0, 1):
+            raise ValueError('origin must be 0 or 1')
+
         self._check_cache()
         pixlist_by_flag = {}
 
         for key, idx in self._dqs_by_flag.items():
-            pixlist_by_flag[key] = list(zip(idx[1] + 1, idx[0] + 1))
+            pixlist_by_flag[key] = list(zip(idx[1] + origin, idx[0] + origin))
 
         return pixlist_by_flag
