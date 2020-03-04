@@ -16,6 +16,7 @@ def teardown_module():
     log.setLevel('INFO')
 
 
+@pytest.mark.remote_data
 def test_mkimphttab(tmpdir):
     """Make sure that when making IMPHTTAB, there are no errors."""
     output = str(tmpdir.join('test_out_imp.fits'))

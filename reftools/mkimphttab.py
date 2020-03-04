@@ -520,7 +520,7 @@ def create_table(output, basemode, detector, useafter, tmgtab=None,
                     skipped_obs.append(obsmode)
 
                     if verbose:
-                        log.info(f'\tSkipping {obsmode0}')
+                        log.info(f'\tSkipping {obsmode}')
 
                     flam_datacol_vals.pop(nr)
                     plam_datacol_vals.pop(nr)
