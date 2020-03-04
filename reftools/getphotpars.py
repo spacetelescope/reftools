@@ -27,7 +27,10 @@ best to use the `GetPhotPars` class. For example::
 import numpy as np
 from astropy.io import fits
 
-from . import _computephotpars
+try:
+    from . import _computephotpars
+except ImportError:
+    _computephotpars = None
 
 __version__ = '0.1.2'
 __vdate__ = '15-Apr-2014'
@@ -323,4 +326,6 @@ class GetPhotPars:
             Result returned by ``_computephotpars.compute_value``.
 
         """
+        if _computephotpars is None:
+            raise ImportError('_computephotpars C-extension not built')
         return _computephotpars.compute_value(row_struct, par_struct)

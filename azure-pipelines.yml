@@ -70,7 +70,7 @@ stages:
         pip install -e .[docs]
 
     - bash: |
-        cd docs
+        cd doc
         make linkcheck
       displayName: 'Run docs link check'
 
