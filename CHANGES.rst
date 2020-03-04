@@ -1,4 +1,7 @@
-2.0.0 (unreleased)
+2.0.1 (unreleased)
+==================
+
+2.0.0 (2020-03-04)
 ==================
 
 * ``interpretdq`` has new option called ``origin`` to return pixel values
