@@ -4,6 +4,8 @@ a recursion functionality for generating all possible obsmodes
 supported by the table.
 
 """
+import ast
+
 # ASTROPY
 from astropy import log
 from astropy.io import fits
@@ -452,8 +454,7 @@ class Graph:
 
         # try to eval the data
         try:
-            # TODO: Use ast.literal_eval(datastr) ?
-            datadict = eval(datastr)
+            datadict = ast.literal_eval(datastr)
         except Exception as e:
             log.error(f'{repr(e)}\ncannot eval data in file {fname}')
             raise
