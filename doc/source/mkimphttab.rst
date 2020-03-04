@@ -25,4 +25,3 @@ Examples
 .. autofunction:: reftools.mkimphttab.create_table_from_table
 .. autofunction:: reftools.mkimphttab.create_nicmos_table
 .. autofunction:: reftools.mkimphttab.compute_values
-.. autofunction:: reftools.mkimphttab.compute_synphot_values
