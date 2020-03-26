@@ -3,6 +3,7 @@ try:
                                                TESTED_VERSIONS)
 except ImportError:
     PYTEST_HEADER_MODULES = {}
+    TESTED_VERSIONS = {}
 
 try:
     from reftools import __version__
