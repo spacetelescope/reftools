@@ -81,6 +81,37 @@ FLAG=32768: 0 (0.000%)
 >>> acsdq.data[hotmask]  # doctest: +SKIP
 array([528, 528, 528, ..., 560, 560, 560], dtype=int16)
 
+If you are only interested in a subset of the data, e.g., the 100x100 corner,
+you can also pass the subarray of interest into `ImageDQ` like this:
+
+>>> from astropy.io import fits
+>>> dqdata = fits.getdata('jbt7a3k7q_flc.fits', 3)  # DQ, 1  # doctest: +SKIP
+>>> dqparser = DQParser.from_instrument('ACS')
+>>> acsdq = ImageDQ(dqdata[:100, :100], dqparser=dqparser)  # doctest: +SKIP
+>>> acsdq.interpret_all()  # doctest: +SKIP
+Parsing DQ flag(s)...
+Done!
+Run time: 0.006 s
+N_FLAGGED: 366/10000 (3.660%)
+FLAG=1    : 0 (0.000%)
+FLAG=2    : 0 (0.000%)
+FLAG=4    : 0 (0.000%)
+FLAG=8    : 0 (0.000%)
+FLAG=16   : 111 (1.110%)
+FLAG=32   : 21 (0.210%)
+FLAG=64   : 115 (1.150%)
+FLAG=128  : 0 (0.000%)
+FLAG=256  : 0 (0.000%)
+FLAG=512  : 100 (1.000%)
+FLAG=1024 : 0 (0.000%)
+FLAG=2048 : 0 (0.000%)
+FLAG=4096 : 49 (0.490%)
+FLAG=8192 : 0 (0.000%)
+FLAG=16384: 0 (0.000%)
+FLAG=32768: 0 (0.000%)
+>>> acsdq.data.shape  # doctest: +SKIP
+(100, 100)
+
 Create a class instance for HST/WFC3 DQ parser (without image).
 Then, interpret a given DQ value:
 
