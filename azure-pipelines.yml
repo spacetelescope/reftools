@@ -90,12 +90,12 @@ stages:
   - template: azure-templates.yml
     parameters:
       name: 'Windows'
-      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-2019'
 
   - template: azure-templates.yml
     parameters:
       name: 'OSX'
-      vmImage: 'macOS-10.13'
+      vmImage: 'macOS-10.15'
 
 schedules:
 - cron: "0 5 * * 1"
