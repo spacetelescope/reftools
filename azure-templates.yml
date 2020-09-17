@@ -4,8 +4,8 @@ parameters:
   name: 'Default'  # Defaults for any parameters that aren't specified
   vmImage: 'Ubuntu-16.04'
   numpyCmd: 'pip install numpy'
-  astropyCmd: 'pip install astropy'
-  pythonVersion: '3.7'
+  astropyCmd: 'pip install astropy==4.1rc2'
+  pythonVersion: '3.8'
   pytestExtraArgs: ''
 
 jobs:
