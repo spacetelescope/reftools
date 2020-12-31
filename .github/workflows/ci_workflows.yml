@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     - master
-  pull_request:
+  pull_request_target:
   schedule:
     # Weekly Monday 5AM build
     # * is a special character in YAML so you have to quote this string
