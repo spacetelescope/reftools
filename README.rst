@@ -9,9 +9,9 @@ REFTOOLS
     :target: https://reftools.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://dev.azure.com/spacetelescope/reftools/_apis/build/status/spacetelescope.reftools?branchName=master
-    :target: https://dev.azure.com/spacetelescope/reftools/_build/latest?definitionId=2&branchName=master
-    :alt: Azure CI Status
+.. image:: https://github.com/spacetelescope/reftools/workflows/CI/badge.svg
+    :target: https://github.com/spacetelescope/reftools/actions?query=workflow%3ACI
+    :alt: Github Actions CI Status
 
 Set of tools used to support creation of calibration reference files for
 Hubble Space Telescope (HST).
