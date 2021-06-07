@@ -73,7 +73,6 @@ jobs:
         python-version: '3.8'
     - name: Install and build
       run: |
-        sudo apt-get install libxml2-utils
         python -m pip install --upgrade pip setuptools
         python -m pip install -e .[test]
     - name: Test without optional deps
@@ -94,7 +93,6 @@ jobs:
         python-version: '3.x'
     - name: Install and build
       run: |
-        sudo apt-get install libxml2-utils
         python -m pip install --upgrade pip setuptools
         python -m pip install git+https://github.com/astropy/astropy.git@main#egg=astropy
         python -m pip install -e .[test]
@@ -116,7 +114,6 @@ jobs:
         python-version: '3.7'
     - name: Install and build
       run: |
-        sudo apt-get install libxml2-utils
         python -m pip install --upgrade pip setuptools
         python -m pip install numpy==1.16.6
         python -m pip install astropy==3.2.2
