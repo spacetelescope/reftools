@@ -53,7 +53,7 @@ jobs:
   other_oses:
     name: CI in Win and OSX
     runs-on: ${{ matrix.os }}
-    needs: [pep_and_audit, initial_tests]
+    needs: initial_tests
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
