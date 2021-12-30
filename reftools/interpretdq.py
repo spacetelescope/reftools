@@ -192,8 +192,8 @@ class DQParser:
             definition_file,
             names=(self._dqcol, self._sdcol, self._ldcol),
             converters={self._dqcol: [ascii.convert_numpy(np.uint16)],
-                        self._sdcol: [ascii.convert_numpy(np.str)],
-                        self._ldcol: [ascii.convert_numpy(np.str)]})
+                        self._sdcol: [ascii.convert_numpy(str)],
+                        self._ldcol: [ascii.convert_numpy(str)]})
         self.metadata = ascii.read(self.tab.meta['comments'], delimiter='=',
                                    format='no_header', names=['key', 'val'])
 
@@ -272,7 +272,7 @@ class DQParser:
             print('Parsing DQ flag(s)...')
             t_beg = time.time()
 
-        data = np.asarray(data, dtype=np.int)  # Ensure int array
+        data = np.asarray(data, dtype=int)  # Ensure int array
         dqs_by_flag = {}
 
         def _one_flag(vf):
@@ -483,7 +483,7 @@ class ImageDQ:
             raise ValueError(
                 f'DQ={dqval} not found in {sorted(self._dqs_by_flag)}')
 
-        mask = np.zeros_like(self.data, dtype=np.bool)
+        mask = np.zeros_like(self.data, dtype=bool)
         mask[self._dqs_by_flag[dqval]] = True
 
         return mask

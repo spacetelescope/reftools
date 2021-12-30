@@ -292,17 +292,17 @@ class ImphttabComp:
                         bwdiff.append((bws1[-1] - bws2[-1]) / bws1[-1])
 
         self.modes = np.array(modes, dtype=np.string_)
-        self.flams1 = np.array(flams1, dtype=np.float)
-        self.plams1 = np.array(plams1, dtype=np.float)
-        self.bws1 = np.array(bws1, dtype=np.float)
+        self.flams1 = np.array(flams1, dtype=float)
+        self.plams1 = np.array(plams1, dtype=float)
+        self.bws1 = np.array(bws1, dtype=float)
 
-        self.flams2 = np.array(flams2, dtype=np.float)
-        self.plams2 = np.array(plams2, dtype=np.float)
-        self.bws2 = np.array(bws2, dtype=np.float)
+        self.flams2 = np.array(flams2, dtype=float)
+        self.plams2 = np.array(plams2, dtype=float)
+        self.bws2 = np.array(bws2, dtype=float)
 
-        self.flamdiff = np.array(flamdiff, dtype=np.float)
-        self.plamdiff = np.array(plamdiff, dtype=np.float)
-        self.bwdiff = np.array(bwdiff, dtype=np.float)
+        self.flamdiff = np.array(flamdiff, dtype=float)
+        self.plamdiff = np.array(plamdiff, dtype=float)
+        self.bwdiff = np.array(bwdiff, dtype=float)
 
     def print_diffs(self, orderby='photflam', lines=25):
         """Print obsmodes and parameters ordered by orderby parameter, with the
