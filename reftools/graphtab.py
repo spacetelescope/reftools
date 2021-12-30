@@ -413,7 +413,7 @@ class Graph:
         """Remove ``'default'`` strings and put on the prefix, if supplied."""
 
         # convert to a numpy array so we can use fast vectorized functions
-        self.obsmodes = np.asarray(self.obsmodes, dtype=np.str)
+        self.obsmodes = np.asarray(self.obsmodes, dtype=str)
 
         if remove_junk:
             for junk in self.obsrules_junk:
@@ -431,7 +431,7 @@ class Graph:
             calmodes = self.obsmodes.copy()
             calmodes = np.char.add(calmodes, ',cal')
             self.obsmodes = np.array(
-                self.obsmodes.tolist() + calmodes.tolist(), dtype=np.str)
+                self.obsmodes.tolist() + calmodes.tolist(), dtype=str)
 
         # add prefix (or not) and convert back to list
         if prefix is not None:

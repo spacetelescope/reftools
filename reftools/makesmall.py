@@ -195,7 +195,7 @@ def resample_chip(chip, mesh, corrxy=None, chipname=None, overwrite=True):
         outimg = fits.PrimaryHDU(data=chip)
         outimg.writeto(chipname, overwrite=overwrite)
 
-    return chip[mesh[1].astype(np.int), mesh[0].astype(np.int)]
+    return chip[mesh[1].astype(int), mesh[0].astype(int)]
 
 
 def fixheader(filter, filename, oldname):
