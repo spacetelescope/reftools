@@ -32,8 +32,8 @@ try:
 except ImportError:
     _computephotpars = None
 
-__version__ = '0.1.2'
-__vdate__ = '15-Apr-2014'
+__version__ = '0.1.3'
+__vdate__ = '02-Feb-2022'
 
 __all__ = ['ImphttabError', 'get_phot_pars', 'GetPhotPars']
 
@@ -228,7 +228,7 @@ class GetPhotPars:
                 f'Obsmode {obsmode} appears multiple times in '
                 f'{self.imphttab_name} extension {ext}')
 
-        return self.imphttab_fits[ext].data[w]
+        return self.imphttab_fits[ext].data[w[0][0]]
 
     def _make_row_struct(self, row, npars):
         """Construct a dictionary corresponding to the ``PhtRow C`` structure
@@ -251,23 +251,23 @@ class GetPhotPars:
 
         """
         row_struct = {}
-        row_struct['obsmode'] = row['obsmode'][0]
-        row_struct['datacol'] = row['datacol'][0]
+        row_struct['obsmode'] = row['obsmode']
+        row_struct['datacol'] = row['datacol']
         row_struct['parnames'] = []
         row_struct['parnum'] = npars
         row_struct['nelem'] = []
         row_struct['parvals'] = []
 
         for i in range(1, npars + 1):
-            row_struct['parnames'].append(row[f'par{i}names'][0])
-            row_struct['nelem'].append(row[f'nelem{i}'][0])
-            row_struct['parvals'].append(row[f'par{i}values'][0].tolist())
+            row_struct['parnames'].append(row[f'par{i}names'])
+            row_struct['nelem'].append(row[f'nelem{i}'])
+            row_struct['parvals'].append(row[f'par{i}values'].tolist())
 
         if npars == 0:
-            row_struct['results'] = row[row['datacol'][0]]
+            row_struct['results'] = row[row['datacol']]
             row_struct['telem'] = 1
         else:
-            row_struct['results'] = row[row['datacol'][0]][0].tolist()
+            row_struct['results'] = row[row['datacol']].tolist()
             row_struct['telem'] = len(row_struct['results'])
 
         return row_struct

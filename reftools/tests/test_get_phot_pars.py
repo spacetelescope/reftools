@@ -1,15 +1,8 @@
-"""
-.. note::
-
-  Some tests are marked as expected failures but they should be fixed
-  if ``getphotpars`` is still used.
-
-"""
 import pytest
 from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose
 
-from .. import getphotpars
+from reftools import getphotpars
 
 
 class TestGetPhotPars:
@@ -23,7 +16,7 @@ class TestGetPhotPars:
     def test_get_row_len_obs(self):
         obsmode = 'acs,wfc1,f625w,f814w,MJD#'
         row = self.get_pars._get_row(obsmode, 'photflam')
-        assert len(row[0]) == 13
+        assert len(row) == 13
         assert row['obsmode'] == obsmode
 
     def test_parse_obsmode_and_make_row_struct_and_compute_value_0(self):
@@ -93,7 +86,6 @@ class TestGetPhotPars:
         assert sorted(ps['parnames']) == ['fr505n#', 'mjd#']
         assert_allclose(sorted(ps['parvals']), [5000, 55000])
 
-    @pytest.mark.xfail(reason='new type not compatible with array')
     def test_make_row_struct_1(self):
         obsmode = 'acs,wfc1,f625w,f814w,MJD#55000.0'
         npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
@@ -110,7 +102,6 @@ class TestGetPhotPars:
         assert rd['nelem'] == [4]
         assert_allclose(rd['parvals'], [[52334.0, 53919.0, 53920.0, 55516.0]])
 
-    @pytest.mark.xfail(reason='new type not compatible with array')
     def test_make_row_struct_2(self):
         obsmode = 'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0'
         npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(obsmode)
@@ -141,13 +132,12 @@ class TestGetPhotPars:
             6.7696605688248e-14, 5.778989112976214e-14, 6.871738863125632e-14,
             6.430043639034794e-14, 5.2999039030883145e-14]
         assert_allclose(rd['results'], ans)
-        assert_allclose(
-            rd['parvals'],
-            [[4824, 4868.2, 4912.4, 4956.6, 5000.8, 5045, 5089.2, 5133.4,
-              5177.6, 5221.8, 5266],
-             [52334, 53919, 53920, 55516]])
+        assert len(rd['parvals']) == 2
+        assert_allclose(rd['parvals'][0],
+                        [4824, 4868.2, 4912.4, 4956.6, 5000.8, 5045, 5089.2,
+                         5133.4, 5177.6, 5221.8, 5266])
+        assert_allclose(rd['parvals'][1], [52334, 53919, 53920, 55516])
 
-    @pytest.mark.xfail(reason='new type not compatible with array')
     def test_compute_value_1(self):
         npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(
             'acs,wfc1,f625w,f814w,MJD#55000.0')
@@ -171,7 +161,6 @@ class TestGetPhotPars:
         result = self.get_pars._compute_value(rd, ps)
         assert_allclose(result, 58.85223114)
 
-    @pytest.mark.xfail(reason='new type not compatible with array')
     def test_compute_value_2(self):
         npars, strp_obsmode, par_dict = self.get_pars._parse_obsmode(
             'acs,wfc1,f625w,fr505n#5000.0,MJD#55000.0')
@@ -211,8 +200,7 @@ def test_get_phot_pars_func(obsmode, imphttab, photflam, photplam, photbw):
     assert_allclose(results["PHOTBW"], photbw)
 
 
-# TODO: Merge this with test_get_phot_pars_func() when fixed.
-@pytest.mark.xfail(reason='new type not compatible with array')
+# TODO: Merge this with test_get_phot_pars_func()
 @pytest.mark.parametrize(
     ('obsmode', 'imphttab', 'photflam', 'photplam', 'photbw'),
     [('acs,wfc1,f625w,f814w,MJD#55000.0', 'data/test_wfc1_dev_imp.fits',
