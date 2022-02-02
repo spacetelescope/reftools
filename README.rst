@@ -1,9 +1,13 @@
 REFTOOLS
 ========
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3695818.svg
-   :target: https://doi.org/10.5281/zenodo.3695818
-   :alt: https://doi.org/10.5281/zenodo.3695818
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5951177.svg
+   :target: https://doi.org/10.5281/zenodo.5951177
+   :alt: 10.5281/zenodo.5951177
+
+.. image:: https://img.shields.io/pypi/v/reftools.svg
+    :target: https://pypi.python.org/pypi/reftools
+    :alt: PyPI
 
 .. image:: https://readthedocs.org/projects/reftools/badge/?version=latest
     :target: https://reftools.readthedocs.io/en/latest/?badge=latest
