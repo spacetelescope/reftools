@@ -1,5 +1,8 @@
-2.0.1 (unreleased)
+2.1.0 (unreleased)
 ==================
+
+* Fixed FITS record handling in ``reftools.getphotpars``. [#54]
+* Various packaging, infrastructure, and compatibility updates.
 
 2.0.0 (2020-03-04)
 ==================
