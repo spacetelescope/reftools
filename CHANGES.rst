@@ -1,4 +1,4 @@
-2.1.0 (unreleased)
+2.1.0 (2022-02-02)
 ==================
 
 * Fixed FITS record handling in ``reftools.getphotpars``. [#54]
