@@ -11,29 +11,10 @@ on:
     - cron: '0 5 * * 1'
 
 jobs:
-  initial_check:
-    name: Mandatory checks before CI
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check base branch
-      uses: actions/github-script@v3
-      if: github.event_name == 'pull_request'
-      with:
-        script: |
-          const allowed_basebranch = 'master';
-          const pr = context.payload.pull_request;
-          if (pr.base.ref !== allowed_basebranch) {
-            core.setFailed(`PR opened against ${pr.base.ref}, not ${allowed_basebranch}`);
-          } else {
-            core.info(`PR opened correctly against ${allowed_basebranch}`);
-          }
-
-  # The rest only run if above are done
 
   dev_deps_tests:
     name: CI with dev dependencies
     runs-on: ubuntu-latest
-    needs: initial_tests
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -54,7 +35,6 @@ jobs:
   other_oses:
     name: CI in Win and OSX
     runs-on: ${{ matrix.os }}
-    needs: initial_tests
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
