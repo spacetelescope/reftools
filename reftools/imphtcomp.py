@@ -291,7 +291,7 @@ class ImphttabComp:
                         bws2.append(bw2.photbw2[w][flam1.nelem2[i] * j + k])
                         bwdiff.append((bws1[-1] - bws2[-1]) / bws1[-1])
 
-        self.modes = np.array(modes, dtype=np.string_)
+        self.modes = np.array(modes, dtype=np.bytes_)
         self.flams1 = np.array(flams1, dtype=float)
         self.plams1 = np.array(plams1, dtype=float)
         self.bws1 = np.array(bws1, dtype=float)
