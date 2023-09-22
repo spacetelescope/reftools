@@ -108,7 +108,7 @@ jobs:
 
   old_deps_tests:
     name: CI with old dependencies
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     needs: [pep_and_audit, initial_tests]
     steps:
     - name: Checkout code
