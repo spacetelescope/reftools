@@ -27,7 +27,7 @@
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.napoleon',
+    'numpydoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.imgmath']
 
