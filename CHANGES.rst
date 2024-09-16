@@ -1,10 +1,9 @@
-2.2.0 (unreleased)
+2.2.0 (2024-09-16)
 ==================
 
-- Dropped support for Python 3.6, 3.7, and 3.8. Minimum supported Python
+* Dropped support for Python 3.6, 3.7, and 3.8. Minimum supported Python
   version is now 3.9. [#56, #71]
-
-- Minimum supported version of ``astropy`` is now 5. [#71]
+* Minimum supported version of ``astropy`` is now 5. [#71]
 
 2.1.0 (2022-02-02)
 ==================
