@@ -232,7 +232,7 @@ intersphinx_mapping = {
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('https://matplotlib.org/', None),
-    'astropy': ('https://docs.astropy.org/en/stable/', None),
-    'synphot': ('https://synphot.readthedocs.io/en/latest/', None),
-    'stsynphot': ('https://stsynphot.readthedocs.io/en/latest/', None)
+    'astropy': ('https://astropy.readthedocs.io/en/stable/', None),
+    'synphot': ('https://synphot.readthedocs.io/en/stable/', None),
+    'stsynphot': ('https://stsynphot.readthedocs.io/en/stable/', None)
     }
