@@ -1,26 +1,31 @@
-name: Publish to PyPI
+name: build
 
 on:
   release:
     types: [released]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-      name: Publish release to PyPI
-      env:
-        PYPI_USERNAME_STSCI_MAINTAINER: ${{ secrets.PYPI_USERNAME_STSCI_MAINTAINER }}
-        PYPI_PASSWORD_STSCI_MAINTAINER: ${{ secrets.PYPI_PASSWORD_STSCI_MAINTAINER }}
-        PYPI_USERNAME_OVERRIDE: ${{ secrets.PYPI_USERNAME_OVERRIDE }}
-        PYPI_PASSWORD_OVERRIDE: ${{ secrets.PYPI_PASSWORD_OVERRIDE }}
-        PYPI_TEST: ${{ secrets.PYPI_TEST }}
-        INDEX_URL_OVERRIDE: ${{ secrets.INDEX_URL_OVERRIDE }}
-      runs-on: ubuntu-latest
-      steps:
-
-          # Check out the commit containing this workflow file.
-          - name: checkout repo
-            uses: actions/checkout@v4
-         
-          - name: custom action
-            uses: spacetelescope/action-publish_to_pypi@master
-            id: custom_action_0
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v1
+    with:
+      upload_to_pypi: ${{ (github.event_name == 'release') && (github.event.action == 'released') }}
+      targets: |
+        # Linux wheels
+        - cp3*-manylinux_x86_64
+        # MacOS wheels
+        - cp3*-macosx_x86_64
+        # Until we have arm64 runners, we can't automatically test arm64 wheels
+        - cp3*-macosx_arm64
+        # Windows wheels
+        - cp3*-win32
+        - cp3*-win_amd64
+      sdist: true
+      test_command: python -c "from reftools import _computephotpars"
+    secrets:
+      pypi_token: ${{ secrets.PYPI_PASSWORD_STSCI_MAINTAINER }}
