@@ -5,5 +5,5 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 build = "cp39-*"  # build for CPython 3.9 Stable API
-skip = ["cp3??t-*"]  # explicitly skip free-threaded builds
+skip = ["cp3*t-*"]  # explicitly skip free-threaded builds
 test-command = "python -c 'from reftools import _computephotpars'"
