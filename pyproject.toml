@@ -4,6 +4,8 @@ requires = ["setuptools>=82.0.1",
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
-build = "cp39-*"  # build for CPython 3.9 Stable API
-skip = ["cp3*t-*"]  # explicitly skip free-threaded builds
+build = [
+    "cp39-*",  # build for CPython 3.9 Stable API
+    "cp3*t-*",  # build for free-threaded Python
+]
 test-command = "python -c 'from reftools import _computephotpars'"
