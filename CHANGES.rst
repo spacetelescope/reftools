@@ -1,6 +1,9 @@
 2.3.0 (unreleased)
 ==================
 
+* Fixed heap buffer overflows in the ``_computephotpars`` C extension when
+  a parameter name is longer than its fixed-size buffer.
+
 2.2.0 (2024-09-16)
 ==================
 

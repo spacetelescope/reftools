@@ -145,6 +145,8 @@ static int fill_pht_row(PyObject *py_row, PhtRow *row) {
       if (!temp_str) {
         return (status = 1);
       }
+      row->parnames[i] = (char *) realloc(row->parnames[i],
+                                          (strlen(temp_str) + 1) * sizeof(char));
       strcpy(row->parnames[i], temp_str);
 
       /* copy nelem numbers */
@@ -259,6 +261,8 @@ static int fill_phot_par(PyObject *py_par, PhotPar *par) {
     if (!temp_str) {
       return (status = 1);
     }
+    par->parnames[i] = (char *) realloc(par->parnames[i],
+                                        (strlen(temp_str) + 1) * sizeof(char));
     strcpy(par->parnames[i], temp_str);
 
     temp_obj = PyList_GetItem(vals_list, (Py_ssize_t) i);
